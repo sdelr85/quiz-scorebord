@@ -1,2 +1,2 @@
 # quiz-scorebord
-Html-pagina's voor live scorebord.
+Html-pagina's voor live scorebord!
