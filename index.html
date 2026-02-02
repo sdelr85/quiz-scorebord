@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Scorebord</title>
+<style>
+  body { 
+    font-family: sans-serif; 
+    background:#111; 
+    color:#fff; 
+  }
+  table { 
+    border-collapse: collapse; 
+    width: 60%; 
+    margin: auto; 
+  }
+  th, td { 
+    padding: 10px; 
+    border-bottom: 1px solid #333; 
+    text-align: center; 
+  }
+  tr.hidden { 
+    display: none; 
+  }
+  button { 
+    margin: 10px auto; 
+    display: block; 
+    padding: 10px 20px; 
+    font-size: 16px;
+  }
+  a { color:#0bf; text-decoration:none; }
+</style>
+</head>
+<body>
+
+<h1 style="text-align:center">🏆 Scorebord</h1>
+
+<button id="revealBtn">Volgende team</button>
+<button id="revealAllBtn">Toon alle teams</button>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Team</th>
+      <th>Totaal</th>
+    </tr>
+  </thead>
+  <tbody id="scoreboard"></tbody>
+</table>
+
+<script>
+// === CSV URL via CORS proxy ===
+const CSV_URL =
+  "https://corsproxy.io/?" +
+  encodeURIComponent(
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvii1ZbzYpDcsoG8qONnw5w5MogMDWmwTNzCd7KhQ9kFw94jTGlWIWy6Vt-JsHsJokY/pub?gid=0&single=true&output=csv"
+  );
+
+let hiddenRows = [];
+
+// handig tijdens debuggen
+window.onerror = console.error;
+
+// === CSV ophalen ===
+fetch(CSV_URL)
+  .then(r => {
+    if (!r.ok) throw new Error("CSV kon niet geladen worden");
+    return r.text();
+  })
+  .then(parseCSV)
+  .catch(err => console.error(err));
+
+// === CSV verwerken ===
+function parseCSV(text) {
+  const rows = text
+    .trim()
+    .split("\n")
+    .map(r => r.split(",").map(v => v.trim()));
+
+  const header = rows.shift();
+
+  let teams = rows.map(r => {
+    const obj = {};
+    header.forEach((h, i) => obj[h] = r[i]);
+
+    obj.total = header
+      .filter(h => /^R\d+/i.test(h))   // R1, R2, R3, ...
+      .reduce((sum, h) => sum + Number(obj[h] || 0), 0);
+
+    return obj;
+  });
+
+  // sorteer: hoogste score eerst
+  teams.sort((a, b) => b.total - a.total);
+
+  const tbody = document.getElementById("scoreboard");
+  tbody.innerHTML = "";
+  hiddenRows = [];
+
+  teams.forEach((team, index) => {
+    const tr = document.createElement("tr");
+    tr.classList.add("hidden");
+
+    tr.innerHTML = `
+      <td>${index + 1}</td>
+      <td>
+        <a href="team.html?token=${team.Token}">
+          ${team.Team}
+        </a>
+      </td>
+      <td>${team.total}</td>
+    `;
+
+    tbody.appendChild(tr);
+    hiddenRows.push(tr);
+  });
+
+  // belangrijk: reveal moet starten bij LAAGSTE team
+  hiddenRows.reverse();
+}
+
+// === 1 team tonen (van onderaan) ===
+document.getElementById("revealBtn").onclick = () => {
+  if (hiddenRows.length > 0) {
+    hiddenRows.shift().classList.remove("hidden");
+  }
+};
+
+// === alle teams tonen ===
+document.getElementById("revealAllBtn").onclick = () => {
+  hiddenRows.forEach(row => row.classList.remove("hidden"));
+  hiddenRows = [];
+};
+</script>
+
+</body>
+</html>
