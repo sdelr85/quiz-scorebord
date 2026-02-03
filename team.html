@@ -3,62 +3,165 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Teamdetail</title>
+  <title>Quiz Nostra – Teamdetail</title>
+
   <style>
-    body { margin:0; background:#0f1226; color:#e8ecff; font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif; }
-    .wrap { max-width:900px; margin:0 auto; padding:24px 16px 40px; }
-    h1 { margin:0 0 6px; font-size:clamp(22px,3.4vw,36px); }
-    .muted { color:#9aa3c7; }
-    .card { background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02)); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px; margin-top:16px; }
-    .row { display:grid; grid-template-columns: 1fr auto; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed rgba(255,255,255,0.08);}
-    .row:last-child { border-bottom:none; }
-    .bar-wrap{ height:8px; background:rgba(255,255,255,0.07); border-radius:999px; overflow:hidden; }
-    .bar{ height:100%; width:0%; background:#6c8cff; transition:width .4s ease; }
-    .pill{ display:inline-block; padding:4px 10px; border:1px solid rgba(255,255,255,0.18); border-radius:999px; color:#9aa3c7; font-size:13px; }
-    a { color:#9bb5ff; }
+    :root {
+      --quiz-red: #E53935;
+      --spes-green: #2E7D32;
+      --spes-yellow: #FDD835;
+
+      --bg: #f6f7f8;
+      --card: #ffffff;
+      --text: #222;
+      --muted: #60666d;
+      --line: #e1e2e5;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    /* HEADER (zelfde als index) */
+    .site-header {
+      background: white;
+      border-bottom: 4px solid var(--spes-green);
+      padding: 18px 20px;
+      margin-bottom: 18px;
+    }
+    .brand {
+      max-width: 1050px;
+      margin: 0 auto;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+    }
+    .brand__logo {
+      height: clamp(48px, 7vw, 72px);
+      width: auto;
+    }
+    .brand__titles {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .brand__title {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 46px);
+      color: var(--quiz-red);
+      font-weight: 900;
+    }
+    .brand__subtitle { color: var(--muted); margin: 0; }
+
+    .wrap {
+      max-width: 1050px;
+      margin: 0 auto;
+      padding: 10px 20px 40px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      padding: 16px;
+      box-shadow:
+        0 2px 2px rgba(0,0,0,0.03),
+        0 5px 14px rgba(0,0,0,0.05);
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--line);
+    }
+    .row:last-child { border-bottom: none; }
+
+    .bar-wrap {
+      width: 100%;
+      height: 8px;
+      background: #efefef;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: var(--spes-green);
+      transition: width 0.4s ease;
+    }
+
+    a { color: var(--spes-green); text-decoration: none; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
-<body>
-<div class="wrap">
-  <h1 id="title">Team</h1>
-  <div class="muted" id="subtitle">Rondes & totaalscore</div>
 
+<body>
+
+<header class="site-header">
+  <div class="brand">
+    <img src="assets/ouderraad-logo.png" class="brand__logo">
+    <div class="brand__titles">
+      <h1 class="brand__title" id="teamTitle">Team</h1>
+      <p class="brand__subtitle">Detailoverzicht</p>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
   <div class="card">
-    <div class="pill" id="rankInfo">Positie: -</div>
-    <div id="rounds"></div>
-    <div style="display:flex; justify-content:space-between; font-size:20px; font-weight:800; padding-top:8px;">
-      <span>Totaal</span><span id="total">0</span>
+    <div id="rankInfo" class="pill">Positie: -</div>
+    <div id="roundList"></div>
+
+    <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:12px;">
+      <span>Totaal</span>
+      <span id="totalScore">0</span>
     </div>
   </div>
 
-  <p><a href="scorebord.html">← Terug naar scorebord</a></p>
+  <p style="margin-top:20px;">
+    scorebord.html">← Terug naar scorebord</a>
+  </p>
 </div>
 
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvii1ZbzYpDcsoG8qONnw5w5MogMDWmwTNzCd7KhQ9kFw94jTGlWIWy6Vt-JsHsJokY/pub?gid=0&single=true&output=csv";
 
 function roundNumberFromName(name){
-  const m = String(name).toLowerCase().match(/r(?:onde)?\s*(\d+)/i);
-  return m ? parseInt(m[1],10) : null;
+  const m = name.toLowerCase().match(/r(?:onde)?\s*(\d+)/);
+  return m ? parseInt(m[1]) : null;
 }
 
 async function fetchCSV(url){
-  const res = await fetch(url + (url.includes("?") ? "&" : "?") + "_t=" + Date.now(), { cache: "no-store" });
-  if(!res.ok) throw new Error("CSV ophalen mislukt");
-  return await res.text();
+  const r = await fetch(url + "&_t=" + Date.now(), {cache:"no-store"});
+  return await r.text();
 }
 
 function parseCSV(text){
-  const rows = text.trim().replace(/^\uFEFF/,"")
-    .split(/\r?\n/)
-    .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => x.replace(/^"|"$/g, "").trim()));
-  if(!rows.length) return { data:[], roundCols:[] };
+  const rows = text.trim().split(/\r?\n/)
+      .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
+      .map(x => x.replace(/^"|"$/g,"")));
 
-  const headers = rows[0].map(h=>h.trim());
-  const hLow    = headers.map(h=>h.toLowerCase());
-  const teamIdx  = hLow.indexOf("team");
+  const headers = rows[0];
+  const hLow = headers.map(h=>h.toLowerCase());
+
+  const teamIdx = hLow.indexOf("team");
   const tokenIdx = hLow.indexOf("token");
-  const scoreIdx = hLow.indexOf("score");
 
   const roundCols = headers
     .map((h,i)=>({label:h,i,nr:roundNumberFromName(h)}))
@@ -66,84 +169,105 @@ function parseCSV(text){
     .sort((a,b)=>a.nr-b.nr);
 
   const data = rows.slice(1).map(r=>{
-    const team  = teamIdx  >= 0 ? (r[teamIdx]  || "") : "";
-    const token = tokenIdx >= 0 ? (r[tokenIdx] || "") : "";
-    let total=0; const rounds=[];
+    let total=0, rounds=[];
     if(roundCols.length>0){
       for(const col of roundCols){
-        const v = Number((r[col.i]||"0").toString().replace(",", "."))||0;
-        rounds.push({label:col.label, value:v});
+        const v = Number(r[col.i]||0);
+        rounds.push({ label: col.label, value: v });
         total += v;
       }
-    }else if(scoreIdx>=0){
-      total = Number((r[scoreIdx]||"0").toString().replace(",", "."))||0;
     }
-    return { team, token, rounds, total };
+    return {
+      team: r[teamIdx]||"",
+      token:r[tokenIdx]||"",
+      total,
+      rounds
+    };
   }).filter(x=>x.team);
 
   // ranks
-  const ranked = [...data].sort((a,b)=> b.total - a.total || a.team.localeCompare(b.team,'nl'));
-  const rankMap = new Map(); let prev=null, rank=0;
-  ranked.forEach((x,i)=>{ if(prev===null || x.total<prev) rank=i+1; rankMap.set(x.token||x.team, rank); prev=x.total; });
+  const ranked=[...data].sort((a,b)=>b.total-a.total || a.team.localeCompare(b.team));
+  const rankMap=new Map(); let prev=null, rank=0;
+  ranked.forEach((x,i)=>{ if(prev===null||x.total<prev) rank=i+1; rankMap.set((x.token||x.team).toLowerCase(), rank); prev=x.total; });
 
-  return { data, roundCols, rankMap };
+  return {data, roundCols, rankMap};
 }
 
-function renderTeam(dataset, keyValue){
-  const key = keyValue.trim().toLowerCase();
-  const item = dataset.data.find(x => (x.token||x.team).toLowerCase() === key);
-  const title = document.getElementById("title");
-  const roundsEl = document.getElementById("rounds");
-  const totalEl = document.getElementById("total");
-  const rankInfo = document.getElementById("rankInfo");
+function renderTeam(ds, key){
+  const keyLow = key.toLowerCase();
+  const item = ds.data.find(x => (x.token||x.team).toLowerCase() === keyLow);
+
+  const teamTitle = document.getElementById("teamTitle");
+  const roundsEl  = document.getElementById("roundList");
+  const totalEl   = document.getElementById("totalScore");
+  const rankInfo  = document.getElementById("rankInfo");
 
   if(!item){
-    title.textContent = "Team niet gevonden";
-    document.getElementById("subtitle").textContent = `Gezocht: ${keyValue}`;
-    roundsEl.innerHTML = "<p>Vraag je QR/URL opnieuw aan bij de jury.</p>";
+    teamTitle.textContent="Team niet gevonden";
+    roundsEl.innerHTML="<p>Niet gevonden.</p>";
     return;
   }
 
-  title.textContent = item.team;
-  const rank = dataset.rankMap.get(item.token||item.team) || "-";
-  rankInfo.textContent = `Positie: ${rank} / ${dataset.data.length}`;
+  teamTitle.textContent=item.team;
+
+  const rk = ds.rankMap.get(keyLow) || "-";
+  rankInfo.textContent = `Positie: ${rk} / ${ds.data.length}`;
 
   roundsEl.innerHTML = "";
-  if (item.rounds.length === 0) {
-    roundsEl.innerHTML = "<p class='muted'>Geen aparte rondekolommen gevonden.</p>";
+  if(item.rounds.length===0){
+    roundsEl.innerHTML="<p>Geen rondekolommen gevonden.</p>";
   } else {
-    const max = Math.max(1, ...item.rounds.map(r => r.value));
-    item.rounds.forEach(r => {
-      const row = document.createElement("div"); row.className="row";
-      const left  = document.createElement("div"); left.textContent = r.label;
-      const right = document.createElement("div"); right.textContent = r.value; right.style.minWidth="60px"; right.style.textAlign="right";
-      const barWrap = document.createElement("div"); barWrap.className="bar-wrap";
-      const bar = document.createElement("div"); bar.className="bar";
-      bar.style.width = Math.round((r.value / max) * 100) + "%";
+    const max = Math.max(...item.rounds.map(r=>r.value),1);
+    item.rounds.forEach(r=>{
+      const row=document.createElement("div");
+      row.className="row";
+
+      const left=document.createElement("div");
+      left.textContent=r.label;
+
+      const right=document.createElement("div");
+      right.textContent=r.value;
+
+      const wide=document.createElement("div");
+      wide.style.gridColumn="1/-1";
+
+      const barWrap=document.createElement("div");
+      barWrap.className="bar-wrap";
+
+      const bar=document.createElement("div");
+      bar.className="bar";
+      bar.style.width=Math.round((r.value/max)*100)+"%";
+
       barWrap.appendChild(bar);
-      const wide = document.createElement("div"); wide.style.gridColumn = "1 / -1"; wide.appendChild(barWrap);
-      row.appendChild(left); row.appendChild(right);
-      roundsEl.appendChild(row); roundsEl.appendChild(wide);
+      wide.appendChild(barWrap);
+
+      row.appendChild(left);
+      row.appendChild(right);
+
+      roundsEl.appendChild(row);
+      roundsEl.appendChild(wide);
     });
   }
-  totalEl.textContent = item.total;
+
+  totalEl.textContent=item.total;
 }
 
 (async function(){
-  try{
-    const p = new URLSearchParams(location.search);
-    const token = (p.get("t")||"").trim();
-    const team  = (p.get("team")||"").trim();
-    if(!token && !team) throw new Error("Geen team- of tokenparameter in de URL.");
-    const csv = await fetchCSV(CSV_URL);
-    const ds = parseCSV(csv);
-    renderTeam(ds, token || team);
-  }catch(e){
-    document.getElementById("title").textContent = "Fout bij laden";
-    document.getElementById("subtitle").textContent = e.message || e;
-    console.error(e);
+  const p=new URLSearchParams(location.search);
+  const token=p.get("t");
+  const team=p.get("team");
+  const key = token || team;
+
+  if(!key){
+    document.getElementById("teamTitle").textContent="Geen team geselecteerd";
+    return;
   }
+
+  const csv=await fetchCSV(CSV_URL);
+  const ds=parseCSV(csv);
+  renderTeam(ds, key);
 })();
 </script>
+
 </body>
 </html>

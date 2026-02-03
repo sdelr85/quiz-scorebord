@@ -25,7 +25,7 @@
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     }
 
-    /* Header */
+    /* HEADER */
     .site-header {
       background: white;
       border-bottom: 4px solid var(--spes-green);
@@ -39,7 +39,7 @@
       align-items: center;
     }
     .brand__logo {
-      height: clamp(36px, 6vw, 60px);
+      height: clamp(48px, 7vw, 72px);
       width: auto;
       object-fit: contain;
     }
@@ -50,7 +50,7 @@
     }
     .brand__title {
       margin: 0;
-      font-size: clamp(28px, 4vw, 44px);
+      font-size: clamp(30px, 4vw, 46px);
       color: var(--quiz-red);
       font-weight: 900;
       line-height: 1.1;
@@ -60,7 +60,7 @@
       margin: 0;
     }
 
-    /* Buttons */
+    /* BUTTONS */
     .actions {
       max-width: 1050px;
       margin: 16px auto 8px;
@@ -83,7 +83,6 @@
     .btn-secondary { background: white; border: 2px solid var(--light-green); color: var(--spes-green); }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    /* Status text */
     #meta {
       text-align: center;
       color: var(--muted);
@@ -91,12 +90,8 @@
       margin: 8px 0 14px;
     }
 
-    /* Scoreboard list */
-    .wrap {
-      max-width: 1050px;
-      margin: 0 auto;
-      padding: 0 20px 40px;
-    }
+    /* SCORE LIST */
+    .wrap { max-width: 1050px; margin: 0 auto; padding: 0 20px 40px; }
     .grid { display: grid; gap: 14px; }
 
     .card {
@@ -112,7 +107,6 @@
         0 5px 14px rgba(0,0,0,0.05);
     }
 
-    /* Rank badges */
     .place {
       min-width: 48px;
       height: 48px;
@@ -127,16 +121,10 @@
     .place.silver { background: linear-gradient(135deg, #e0e0e0, #bdbdbd); }
     .place.bronze { background: linear-gradient(135deg, #ffcc80, #fb8c00); }
 
-    /* Team name / link */
-    .team {
-      flex: 1;
-      font-weight: 700;
-      font-size: 20px;
-    }
+    .team { flex: 1; font-weight: 700; font-size: 20px; }
     .team a { color: var(--text); text-decoration: none; }
     .team a:hover { text-decoration: underline; }
 
-    /* Progress bars */
     .bar-wrap {
       width: 100%;
       height: 8px;
@@ -165,10 +153,7 @@
 
 <header class="site-header">
   <div class="brand">
-    <img
-      src="assets/ouderraad-logo.png"
-      alt="Ouderraad Spes Nostra Kuurne"
-      class="brand__logo" />
+    <img src="assets/ouderraad-logo.png" class="brand__logo" alt="Ouderraad">
     <div class="brand__titles">
       <h1 class="brand__title">Quiz Nostra</h1>
       <p class="brand__subtitle">Live scorebord</p>
@@ -177,10 +162,10 @@
 </header>
 
 <div class="actions">
-  <button id="btnAdd"    class="btn btn-primary">+ Voeg team toe</button>
-  <button id="btnUndo"   class="btn btn-secondary">– Verwijder team</button>
-  <button id="btnAll"    class="btn btn-secondary">Toon alle teams</button>
-  <button id="btnReset"  class="btn btn-secondary">Reset</button>
+  <button id="btnAdd" class="btn btn-primary">+ Voeg team toe</button>
+  <button id="btnUndo" class="btn btn-secondary">– Verwijder laatste team</button>
+  <button id="btnAll" class="btn btn-secondary">Toon alle teams</button>
+  <button id="btnReset" class="btn btn-secondary">Reset</button>
 </div>
 
 <div id="meta">Laden…</div>
@@ -194,178 +179,129 @@
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvii1ZbzYpDcsoG8qONnw5w5MogMDWmwTNzCd7KhQ9kFw94jTGlWIWy6Vt-JsHsJokY/pub?gid=0&single=true&output=csv";
 const REFRESH_MS = 5000;
 
-/* === State === */
-let fullData = [];       // volledige, gerankte lijst
-let visibleCount = 0;    // aantal zichtbare teams, van onder naar boven
+/* === STATE === */
+let fullData = [];
+let visibleCount = 0;
 
-/* === Helpers === */
-function roundNumberFromName(name) {
-  const m = String(name).toLowerCase().match(/r(?:onde)?\s*(\d+)/i);
-  return m ? parseInt(m[1], 10) : null;
-}
+/* Helpers */
+function roundNumberFromName(n){ const m = n.toLowerCase().match(/r(?:onde)?\s*(\d+)/); return m ? parseInt(m[1]) : null; }
 
-async function fetchCSV(url) {
-  // cache-buster
-  const res = await fetch(url + (url.includes("?") ? "&" : "?") + "_t=" + Date.now(), { cache: "no-store" });
-  if (!res.ok) throw new Error("CSV ophalen mislukt");
+async function fetchCSV(url){
+  const res = await fetch(url + "&_t=" + Date.now(), {cache:"no-store"});
   return await res.text();
 }
 
-function parseCSV(text) {
-  // Robuuste CSV-split (respecteert quotes)
-  const rows = text.trim()
-    .replace(/^\uFEFF/, "")
-    .split(/\r?\n/)
-    .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => x.replace(/^"|"$/g, "").trim()));
+function parseCSV(text){
+  const rows = text.trim().split(/\r?\n/)
+      .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
+      .map(x => x.replace(/^"|"$/g,"")));
 
-  if (!rows.length) return [];
+  const headers = rows[0].map(h=>h.trim());
+  const hLow = headers.map(h=>h.toLowerCase());
 
-  const headers = rows[0].map(h => h.trim());
-  const hLow = headers.map(h => h.toLowerCase());
-
-  const teamIdx  = hLow.indexOf("team");
+  const teamIdx = hLow.indexOf("team");
   const tokenIdx = hLow.indexOf("token");
-  const scoreIdx = hLow.indexOf("score");
 
   const roundCols = headers
-    .map((h,i) => ({ label: h, i, nr: roundNumberFromName(h) }))
-    .filter(o => o.nr !== null)
-    .sort((a,b) => a.nr - b.nr);
+    .map((h,i)=>({label:h,i,nr:roundNumberFromName(h)}))
+    .filter(o=>o.nr!==null)
+    .sort((a,b)=>a.nr-b.nr);
 
-  const data = rows.slice(1).map(r => {
-    const team  = teamIdx  >= 0 ? (r[teamIdx]  || "") : "";
-    const token = tokenIdx >= 0 ? (r[tokenIdx] || "") : "";
+  return rows.slice(1).map(r=>{
     let total = 0;
-
-    if (roundCols.length > 0) {
-      for (const col of roundCols) {
-        total += Number((r[col.i] || "0").toString().replace(",", "."));
-      }
-    } else if (scoreIdx >= 0) {
-      total = Number((r[scoreIdx] || "0").toString().replace(",", "."));
+    if(roundCols.length>0){
+      for(const col of roundCols) total += Number(r[col.i]||0);
     }
-
-    return { team, token, total };
-  });
-
-  return data.filter(x => x.team);
+    return {
+      team: r[teamIdx]||"",
+      token:r[tokenIdx]||"",
+      total
+    };
+  }).filter(x=>x.team);
 }
 
-function computeRanks(list) {
-  list.sort((a,b) => b.total - a.total || a.team.localeCompare(b.team, 'nl'));
-  let prev = null, rank = 0;
-  list.forEach((x,i) => {
-    if (prev === null || x.total < prev) rank = i + 1;
-    x.rank = rank;
-    prev = x.total;
-  });
+function computeRanks(list){
+  list.sort((a,b)=>b.total - a.total || a.team.localeCompare(b.team));
+  let prev=null, rank=0;
+  list.forEach((x,i)=>{ if(prev===null||x.total<prev) rank=i+1; x.rank=rank; prev=x.total; });
   return list;
 }
 
-function render(list) {
+function render(list){
   const root = document.getElementById("list");
   root.innerHTML = "";
 
-  // toon enkel de onderste N teams (N = visibleCount)
-  const toShow = visibleCount > 0 ? list.slice(-visibleCount) : [];
+  const toShow = list.slice(-visibleCount);
 
-  const max = Math.max(1, ...toShow.map(x => x.total));
+  const max = Math.max(1,...toShow.map(x=>x.total));
 
-  toShow.forEach(row => {
+  toShow.forEach(row=>{
     const card = document.createElement("div");
-    card.className = "card";
+    card.className="card";
 
     const place = document.createElement("div");
-    place.className = "place";
-    if (row.rank === 2) place.classList.add("silver");
-    if (row.rank === 3) place.classList.add("bronze");
-    place.textContent = row.rank;
+    place.className="place";
+    if(row.rank===2) place.classList.add("silver");
+    if(row.rank===3) place.classList.add("bronze");
+    place.textContent=row.rank;
 
-    const name = document.createElement("div");
-    name.className = "team";
-    const a = document.createElement("a");
-    // click-through: bij voorkeur via token, anders via teamnaam
-    const q = row.token ? ("t=" + encodeURIComponent(row.token)) : ("team=" + encodeURIComponent(row.team));
-    a.href = "team.html?" + q;
-    a.textContent = row.team;       // <<< teamnaam zichtbaar op scorebord
-    name.appendChild(a);
+    const team = document.createElement("div");
+    team.className="team";
+    const a=document.createElement("a");
+    const q=row.token ? ("t="+encodeURIComponent(row.token)) : ("team="+encodeURIComponent(row.team));
+    a.href="team.html?"+q;
+    a.textContent=row.team;
+    team.appendChild(a);
 
-    const barWrap = document.createElement("div");
-    barWrap.className = "bar-wrap";
-    const bar = document.createElement("div");
-    bar.className = "bar";
-    bar.style.width = Math.round((row.total / max) * 100) + "%";
+    const barWrap=document.createElement("div");
+    barWrap.className="bar-wrap";
+    const bar=document.createElement("div");
+    bar.className="bar";
+    bar.style.width=Math.round((row.total/max)*100)+"%";
     barWrap.appendChild(bar);
 
-    const score = document.createElement("div");
-    score.className = "score";
-    score.textContent = row.total;
+    const score=document.createElement("div");
+    score.className="score";
+    score.textContent=row.total;
 
     card.appendChild(place);
-    card.appendChild(name);
+    card.appendChild(team);
     card.appendChild(barWrap);
     card.appendChild(score);
 
     root.appendChild(card);
   });
 
-  const meta = document.getElementById("meta");
-  meta.textContent =
-    (toShow.length ? `Getoond: ${toShow.length}/${list.length} – ` : "") +
-    "Laatst bijgewerkt: " + new Date().toLocaleTimeString();
+  const meta=document.getElementById("meta");
+  meta.textContent = toShow.length ? 
+      `Getoond: ${toShow.length}/${list.length} – Laatst bijgewerkt: ` + new Date().toLocaleTimeString()
+      : "Laatst bijgewerkt: " + new Date().toLocaleTimeString();
 
-  // knoppen updaten
-  const addBtn  = document.getElementById("btnAdd");
-  const undoBtn = document.getElementById("btnUndo");
-  const allBtn  = document.getElementById("btnAll");
-  const resetBtn= document.getElementById("btnReset");
-
-  addBtn.disabled   = (visibleCount >= list.length);
-  undoBtn.disabled  = (visibleCount <= 0);
-  allBtn.disabled   = (visibleCount >= list.length);
-  resetBtn.disabled = (visibleCount <= 0);
+  document.getElementById("btnAdd").disabled   = (visibleCount >= list.length);
+  document.getElementById("btnUndo").disabled  = (visibleCount <= 0);
+  document.getElementById("btnAll").disabled   = (visibleCount >= list.length);
+  document.getElementById("btnReset").disabled = (visibleCount <= 0);
 }
 
-async function tick() {
-  try {
-    const csv = await fetchCSV(CSV_URL);
-    const parsed = parseCSV(csv);
-    const ranked = computeRanks(parsed);
-    fullData = ranked;
+async function tick(){
+  const csv = await fetchCSV(CSV_URL);
+  const parsed = parseCSV(csv);
+  fullData = computeRanks(parsed);
 
-    // Zorg dat visibleCount niet boven lengte uitkomt wanneer teams erbij komen/wegvallen
-    if (visibleCount > fullData.length) visibleCount = fullData.length;
+  if(visibleCount > fullData.length) visibleCount = fullData.length;
 
-    render(fullData);
-  } catch (e) {
-    console.error(e);
-    document.getElementById("meta").textContent = "Fout bij laden: " + (e.message || e);
-  } finally {
-    setTimeout(tick, REFRESH_MS);
-  }
+  render(fullData);
+  setTimeout(tick, REFRESH_MS);
 }
 
-/* === Controls === */
-document.getElementById("btnAdd").addEventListener("click", () => {
-  visibleCount = Math.min(visibleCount + 1, fullData.length);
-  render(fullData);
-});
-document.getElementById("btnUndo").addEventListener("click", () => {
-  visibleCount = Math.max(visibleCount - 1, 0);
-  render(fullData);
-});
-document.getElementById("btnAll").addEventListener("click", () => {
-  visibleCount = fullData.length;
-  render(fullData);
-});
-document.getElementById("btnReset").addEventListener("click", () => {
-  visibleCount = 0;
-  render(fullData);
-});
+/* Controls */
+document.getElementById("btnAdd").onclick = ()=>{ visibleCount++; render(fullData); };
+document.getElementById("btnUndo").onclick = ()=>{ visibleCount=Math.max(0,visibleCount-1); render(fullData); };
+document.getElementById("btnAll").onclick  = ()=>{ visibleCount=fullData.length; render(fullData); };
+document.getElementById("btnReset").onclick= ()=>{ visibleCount=0; render(fullData); };
 
 /* Start */
 tick();
 </script>
-
 </body>
 </html>
