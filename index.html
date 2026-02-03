@@ -5,210 +5,183 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Quiz Nostra – Scorebord</title>
 
-<style>
-  :root {
-    /* Branding colors */
-    --quiz-red: #E53935;
-    --spes-green: #2E7D32;
-    --spes-green-dark: #1B5E20;
-    --spes-yellow: #FDD835;
-    --light-green: #A5D6A7;
+  <style>
+    :root {
+      --quiz-red: #E53935;
+      --spes-green: #2E7D32;
+      --spes-yellow: #FDD835;
+      --light-green: #A5D6A7;
 
-    /* UI */
-    --bg: #f6f7f8;
-    --card: #ffffff;
-    --text: #222;
-    --muted: #60666d;
-    --line: #e1e2e5;
-  }
+      --bg: #f6f7f8;
+      --card: #ffffff;
+      --text: #222;
+      --muted: #60666d;
+      --line: #e1e2e5;
+    }
 
-  body {
-    margin: 0;
-    background: var(--bg);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  }
+    body {
+      margin: 0;
+      background: var(--bg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    }
 
-  /* Header */
-  .site-header {
-    background: white;
-    border-bottom: 4px solid var(--spes-green);
-    padding: 18px 20px;
-  }
+    /* Header */
+    .site-header {
+      background: white;
+      border-bottom: 4px solid var(--spes-green);
+      padding: 18px 20px;
+    }
+    .brand {
+      max-width: 1050px;
+      margin: 0 auto;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+    }
+    .brand__logo {
+      height: clamp(36px, 6vw, 60px);
+      width: auto;
+      object-fit: contain;
+    }
+    .brand__titles {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .brand__title {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 44px);
+      color: var(--quiz-red);
+      font-weight: 900;
+      line-height: 1.1;
+    }
+    .brand__subtitle {
+      color: var(--muted);
+      margin: 0;
+    }
 
-  .brand {
-    max-width: 1050px;
-    margin: 0 auto;
-    display: flex;
-    gap: 18px;
-    align-items: center;
-  }
+    /* Buttons */
+    .actions {
+      max-width: 1050px;
+      margin: 16px auto 8px;
+      padding: 0 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 150ms;
+      font-weight: 600;
+    }
+    .btn-primary { background: var(--spes-green); color: white; }
+    .btn-secondary { background: white; border: 2px solid var(--light-green); color: var(--spes-green); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-  .brand__logo {
-    height: clamp(36px, 6vw, 60px);
-    width: auto;
-    object-fit: contain;
-  }
+    /* Status text */
+    #meta {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      margin: 8px 0 14px;
+    }
 
-  .brand__titles {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
+    /* Scoreboard list */
+    .wrap {
+      max-width: 1050px;
+      margin: 0 auto;
+      padding: 0 20px 40px;
+    }
+    .grid { display: grid; gap: 14px; }
 
-  .brand__title {
-    margin: 0;
-    font-size: clamp(28px, 4vw, 44px);
-    color: var(--quiz-red);
-    font-weight: 900;
-    line-height: 1.1;
-  }
+    .card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow:
+        0 2px 2px rgba(0,0,0,0.03),
+        0 5px 14px rgba(0,0,0,0.05);
+    }
 
-  .brand__subtitle {
-    color: var(--muted);
-    margin: 0;
-  }
+    /* Rank badges */
+    .place {
+      min-width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 20px;
+      background: linear-gradient(135deg, var(--spes-yellow), #ffb300);
+      color: #333;
+    }
+    .place.silver { background: linear-gradient(135deg, #e0e0e0, #bdbdbd); }
+    .place.bronze { background: linear-gradient(135deg, #ffcc80, #fb8c00); }
 
-  /* Buttons */
-  .actions {
-    max-width: 1050px;
-    margin: 20px auto;
-    padding: 0 20px;
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-  }
+    /* Team name / link */
+    .team {
+      flex: 1;
+      font-weight: 700;
+      font-size: 20px;
+    }
+    .team a { color: var(--text); text-decoration: none; }
+    .team a:hover { text-decoration: underline; }
 
-  .btn {
-    padding: 10px 18px;
-    border-radius: 10px;
-    border: 2px solid transparent;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 150ms;
-    font-weight: 600;
-  }
+    /* Progress bars */
+    .bar-wrap {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #efefef;
+      overflow: hidden;
+    }
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: var(--spes-green);
+      transition: width 0.5s ease;
+    }
 
-  .btn-primary {
-    background: var(--spes-green);
-    color: white;
-  }
-
-  .btn-secondary {
-    background: white;
-    border: 2px solid var(--light-green);
-    color: var(--spes-green);
-  }
-
-  .btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  /* Status text */
-  #meta {
-    text-align: center;
-    color: var(--muted);
-    font-size: 13px;
-    margin-bottom: 14px;
-  }
-
-  /* Scoreboard list */
-  .wrap {
-    max-width: 1050px;
-    margin: 0 auto;
-    padding: 0 20px 40px;
-  }
-
-  .grid {
-    display: grid;
-    gap: 14px;
-  }
-
-  .card {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 14px 16px;
-    box-shadow:
-      0 2px 2px rgba(0,0,0,0.03),
-      0 5px 14px rgba(0,0,0,0.05);
-  }
-
-  /* Rank badges */
-  .place {
-    min-width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: grid;
-    place-items: center;
-    font-weight: 800;
-    font-size: 20px;
-    background: linear-gradient(135deg, var(--spes-yellow), #ffb300);
-    color: #333;
-  }
-  .place.silver {
-    background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
-  }
-  .place.bronze {
-    background: linear-gradient(135deg, #ffcc80, #fb8c00);
-  }
-
-  /* Team name / link */
-  .team {
-    flex: 1;
-    font-weight: 700;
-    font-size: 20px;
-  }
-
-  .team a {
-    color: var(--text);
-    text-decoration: none;
-  }
-  .team a:hover {
-    text-decoration: underline;
-  }
-
-  /* Progress bars */
-  .bar-wrap {
-    width: 100%;
-    height: 8px;
-    border-radius: 999px;
-    background: #efefef;
-    overflow: hidden;
-  }
-
-  .bar {
-    height: 100%;
-    width: 0%;
-    background: var(--spes-green);
-    transition: width 0.5s ease;
-  }
-
-  .score {
-    font-size: 22px;
-    font-weight: 700;
-    width: 60px;
-    text-align: right;
-    color: var(--text);
-  }
-
-</style>
+    .score {
+      font-size: 22px;
+      font-weight: 700;
+      width: 60px;
+      text-align: right;
+      color: var(--text);
+    }
+  </style>
 </head>
 
 <body>
 
 <header class="site-header">
   <div class="brand">
-    <img src="assets/ouderraad-logo.png"
-     alt="Ouderraad Spes Nostra Kuurne"
-     class="brand__logo">Quiz Nostra</h1>
-      <p class="brand__subtitle">Live Scorebord</p>
+    <img
+      src="assets/ouderraad-logo.png"
+      alt="Ouderraad Spes Nostra Kuurne"
+      class="brand__logo" />
+    <div class="brand__titles">
+      <h1 class="brand__title">Quiz Nostra</h1>
+      <p class="brand__subtitle">Live scorebord</p>
     </div>
   </div>
 </header>
+
+<div class="actions">
+  <button id="btnAdd"    class="btn btn-primary">+ Voeg team toe</button>
+  <button id="btnUndo"   class="btn btn-secondary">– Verwijder team</button>
+  <button id="btnAll"    class="btn btn-secondary">Toon alle teams</button>
+  <button id="btnReset"  class="btn btn-secondary">Reset</button>
+</div>
 
 <div id="meta">Laden…</div>
 
@@ -221,6 +194,10 @@
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvii1ZbzYpDcsoG8qONnw5w5MogMDWmwTNzCd7KhQ9kFw94jTGlWIWy6Vt-JsHsJokY/pub?gid=0&single=true&output=csv";
 const REFRESH_MS = 5000;
 
+/* === State === */
+let fullData = [];       // volledige, gerankte lijst
+let visibleCount = 0;    // aantal zichtbare teams, van onder naar boven
+
 /* === Helpers === */
 function roundNumberFromName(name) {
   const m = String(name).toLowerCase().match(/r(?:onde)?\s*(\d+)/i);
@@ -228,21 +205,27 @@ function roundNumberFromName(name) {
 }
 
 async function fetchCSV(url) {
-  const res = await fetch(url + "&_t=" + Date.now(), { cache: "no-store" });
+  // cache-buster
+  const res = await fetch(url + (url.includes("?") ? "&" : "?") + "_t=" + Date.now(), { cache: "no-store" });
+  if (!res.ok) throw new Error("CSV ophalen mislukt");
   return await res.text();
 }
 
 function parseCSV(text) {
+  // Robuuste CSV-split (respecteert quotes)
   const rows = text.trim()
     .replace(/^\uFEFF/, "")
     .split(/\r?\n/)
-    .map(r => r.split(",").map(x => x.replace(/^"|"$/g, "").trim()));
+    .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => x.replace(/^"|"$/g, "").trim()));
+
+  if (!rows.length) return [];
 
   const headers = rows[0].map(h => h.trim());
   const hLow = headers.map(h => h.toLowerCase());
 
-  const teamIdx = hLow.indexOf("team");
+  const teamIdx  = hLow.indexOf("team");
   const tokenIdx = hLow.indexOf("token");
+  const scoreIdx = hLow.indexOf("score");
 
   const roundCols = headers
     .map((h,i) => ({ label: h, i, nr: roundNumberFromName(h) }))
@@ -250,14 +233,16 @@ function parseCSV(text) {
     .sort((a,b) => a.nr - b.nr);
 
   const data = rows.slice(1).map(r => {
-    const team = r[teamIdx] || "";
-    const token = r[tokenIdx] || "";
+    const team  = teamIdx  >= 0 ? (r[teamIdx]  || "") : "";
+    const token = tokenIdx >= 0 ? (r[tokenIdx] || "") : "";
     let total = 0;
 
     if (roundCols.length > 0) {
       for (const col of roundCols) {
-        total += Number(r[col.i] || 0);
+        total += Number((r[col.i] || "0").toString().replace(",", "."));
       }
+    } else if (scoreIdx >= 0) {
+      total = Number((r[scoreIdx] || "0").toString().replace(",", "."));
     }
 
     return { team, token, total };
@@ -267,7 +252,7 @@ function parseCSV(text) {
 }
 
 function computeRanks(list) {
-  list.sort((a,b) => b.total - a.total || a.team.localeCompare(b.team));
+  list.sort((a,b) => b.total - a.total || a.team.localeCompare(b.team, 'nl'));
   let prev = null, rank = 0;
   list.forEach((x,i) => {
     if (prev === null || x.total < prev) rank = i + 1;
@@ -281,21 +266,29 @@ function render(list) {
   const root = document.getElementById("list");
   root.innerHTML = "";
 
-  const max = Math.max(1, ...list.map(x => x.total));
+  // toon enkel de onderste N teams (N = visibleCount)
+  const toShow = visibleCount > 0 ? list.slice(-visibleCount) : [];
 
-  list.forEach(row => {
+  const max = Math.max(1, ...toShow.map(x => x.total));
+
+  toShow.forEach(row => {
     const card = document.createElement("div");
     card.className = "card";
 
     const place = document.createElement("div");
     place.className = "place";
-    if(row.rank === 2) place.classList.add("silver");
-    if(row.rank === 3) place.classList.add("bronze");
+    if (row.rank === 2) place.classList.add("silver");
+    if (row.rank === 3) place.classList.add("bronze");
     place.textContent = row.rank;
 
     const name = document.createElement("div");
     name.className = "team";
-    name.innerHTML = `<a href="team.html?team=${encodeURIComponent(row.team)}m}</a>`;
+    const a = document.createElement("a");
+    // click-through: bij voorkeur via token, anders via teamnaam
+    const q = row.token ? ("t=" + encodeURIComponent(row.token)) : ("team=" + encodeURIComponent(row.team));
+    a.href = "team.html?" + q;
+    a.textContent = row.team;       // <<< teamnaam zichtbaar op scorebord
+    name.appendChild(a);
 
     const barWrap = document.createElement("div");
     barWrap.className = "bar-wrap";
@@ -316,23 +309,61 @@ function render(list) {
     root.appendChild(card);
   });
 
-  document.getElementById("meta").textContent =
+  const meta = document.getElementById("meta");
+  meta.textContent =
+    (toShow.length ? `Getoond: ${toShow.length}/${list.length} – ` : "") +
     "Laatst bijgewerkt: " + new Date().toLocaleTimeString();
+
+  // knoppen updaten
+  const addBtn  = document.getElementById("btnAdd");
+  const undoBtn = document.getElementById("btnUndo");
+  const allBtn  = document.getElementById("btnAll");
+  const resetBtn= document.getElementById("btnReset");
+
+  addBtn.disabled   = (visibleCount >= list.length);
+  undoBtn.disabled  = (visibleCount <= 0);
+  allBtn.disabled   = (visibleCount >= list.length);
+  resetBtn.disabled = (visibleCount <= 0);
 }
 
 async function tick() {
   try {
     const csv = await fetchCSV(CSV_URL);
-    const data = parseCSV(csv);
-    const ranked = computeRanks(data);
-    render(ranked);
+    const parsed = parseCSV(csv);
+    const ranked = computeRanks(parsed);
+    fullData = ranked;
+
+    // Zorg dat visibleCount niet boven lengte uitkomt wanneer teams erbij komen/wegvallen
+    if (visibleCount > fullData.length) visibleCount = fullData.length;
+
+    render(fullData);
   } catch (e) {
     console.error(e);
+    document.getElementById("meta").textContent = "Fout bij laden: " + (e.message || e);
   } finally {
     setTimeout(tick, REFRESH_MS);
   }
 }
 
+/* === Controls === */
+document.getElementById("btnAdd").addEventListener("click", () => {
+  visibleCount = Math.min(visibleCount + 1, fullData.length);
+  render(fullData);
+});
+document.getElementById("btnUndo").addEventListener("click", () => {
+  visibleCount = Math.max(visibleCount - 1, 0);
+  render(fullData);
+});
+document.getElementById("btnAll").addEventListener("click", () => {
+  visibleCount = fullData.length;
+  render(fullData);
+});
+document.getElementById("btnReset").addEventListener("click", () => {
+  visibleCount = 0;
+  render(fullData);
+});
+
+/* Start */
 tick();
 </script>
 
