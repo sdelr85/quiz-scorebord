@@ -1,121 +1,132 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Quiz Nostra – Teamdetail</title>
 
-  <style>
-    :root {
-      --quiz-red: #E53935;
-      --spes-green: #2E7D32;
-      --spes-yellow: #FDD835;
+<style>
+  :root {
+    --quiz-red:#E53935;
+    --spes-green:#2E7D32;
+    --spes-yellow:#FDD835;
+    --light-green:#A5D6A7;
 
-      --bg: #f6f7f8;
-      --card: #ffffff;
-      --text: #222;
-      --muted: #60666d;
-      --line: #e1e2e5;
-    }
+    --bg:#f6f7f8;
+    --card:#ffffff;
+    --text:#222;
+    --muted:#60666d;
+    --line:#e1e2e5;
+    --rank-default:#d5d7db;
+  }
 
-    body {
-      margin: 0;
-      background: var(--bg);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-    }
+  body {
+    margin:0;
+    background:var(--bg);
+    font-family: system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+  }
 
-    /* HEADER (zelfde als index) */
-    .site-header {
-      background: white;
-      border-bottom: 4px solid var(--spes-green);
-      padding: 18px 20px;
-      margin-bottom: 18px;
-    }
-    .brand {
-      max-width: 1050px;
-      margin: 0 auto;
-      display: flex;
-      gap: 18px;
-      align-items: center;
-    }
-    .brand__logo {
-      height: clamp(48px, 7vw, 72px);
-      width: auto;
-    }
-    .brand__titles {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .brand__title {
-      margin: 0;
-      font-size: clamp(30px, 4vw, 46px);
-      color: var(--quiz-red);
-      font-weight: 900;
-    }
-    .brand__subtitle { color: var(--muted); margin: 0; }
+  /* Header */
+  .site-header {
+    background:white;
+    border-bottom:4px solid var(--spes-green);
+    padding:20px;
+    margin-bottom:20px;
+  }
 
-    .wrap {
-      max-width: 1050px;
-      margin: 0 auto;
-      padding: 10px 20px 40px;
-    }
+  .brand {
+    max-width:1050px;
+    margin:0 auto;
+    display:flex;
+    gap:20px;
+    align-items:center;
+  }
 
-    .card {
-      background: var(--card);
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      padding: 16px;
-      box-shadow:
-        0 2px 2px rgba(0,0,0,0.03),
-        0 5px 14px rgba(0,0,0,0.05);
-    }
+  .brand__logo {
+    height: clamp(60px,8vw,90px);
+    width:auto;
+  }
 
-    .pill {
-      display: inline-block;
-      padding: 4px 10px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
+  .brand__titles {
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
 
-    .row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px dashed var(--line);
-    }
-    .row:last-child { border-bottom: none; }
+  .brand__title {
+    margin:0;
+    font-size:clamp(32px,4vw,48px);
+    color:var(--quiz-red);
+    font-weight:900;
+  }
 
-    .bar-wrap {
-      width: 100%;
-      height: 8px;
-      background: #efefef;
-      border-radius: 999px;
-      overflow: hidden;
-      margin-top: 4px;
-    }
-    .bar {
-      height: 100%;
-      width: 0%;
-      background: var(--spes-green);
-      transition: width 0.4s ease;
-    }
+  .brand__subtitle {
+    margin:0;
+    color:var(--muted);
+  }
 
-    a { color: var(--spes-green); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-  </style>
+  /* Content */
+  .wrap {
+    max-width:1050px;
+    margin:0 auto;
+    padding:0 20px 40px;
+  }
+
+  .card {
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+    box-shadow:0 2px 2px rgba(0,0,0,0.03),
+               0 5px 14px rgba(0,0,0,0.05);
+  }
+
+  .pill {
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    color:var(--muted);
+    margin-bottom:12px;
+    font-size:13px;
+  }
+
+  .row {
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:10px;
+    align-items:center;
+    padding:8px 0;
+    border-bottom:1px dashed var(--line);
+  }
+  .row:last-child { border-bottom:none; }
+
+  .bar-wrap {
+    width:100%;
+    height:8px;
+    background:#efefef;
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:4px;
+  }
+
+  .bar {
+    height:100%;
+    background:var(--spes-green);
+    width:0%;
+    transition:0.4s ease;
+  }
+
+  a { color:var(--spes-green); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+</style>
 </head>
 
 <body>
 
 <header class="site-header">
   <div class="brand">
-    <img src="assets/ouderraad-logo.png" class="brand__logo">
+    assets/ouderraad-logo.png
     <div class="brand__titles">
       <h1 class="brand__title" id="teamTitle">Team</h1>
       <p class="brand__subtitle">Detailoverzicht</p>
@@ -124,139 +135,134 @@
 </header>
 
 <div class="wrap">
+
   <div class="card">
     <div id="rankInfo" class="pill">Positie: -</div>
+
     <div id="roundList"></div>
 
-    <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:12px;">
+    <div style="display:flex; justify-content:space-between; margin-top:14px; font-weight:800;">
       <span>Totaal</span>
       <span id="totalScore">0</span>
     </div>
   </div>
 
-  <p style="margin-top:20px;">
+  <p style="margin-top:20px">
     scorebord.html">← Terug naar scorebord</a>
   </p>
+
 </div>
 
 <script>
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvii1ZbzYpDcsoG8qONnw5w5MogMDWmwTNzCd7KhQ9kFw94jTGlWIWy6Vt-JsHsJokY/pub?gid=0&single=true&output=csv";
+const CSV_URL =
+ "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvii1ZbzYpDcsoG8qONnw5w5MogMDWmwTNzCd7KhQ9kFw94jTGlWIWy6Vt-JsHsJokY/pub?gid=0&single=true&output=csv";
 
-function roundNumberFromName(name){
-  const m = name.toLowerCase().match(/r(?:onde)?\s*(\d+)/);
+function roundNumberFromName(n){
+  const m=n.toLowerCase().match(/r(?:onde)?\s*(\d+)/);
   return m ? parseInt(m[1]) : null;
 }
 
 async function fetchCSV(url){
-  const r = await fetch(url + "&_t=" + Date.now(), {cache:"no-store"});
+  const r=await fetch(url+"&_t="+Date.now(),{cache:"no-store"});
   return await r.text();
 }
 
 function parseCSV(text){
-  const rows = text.trim().split(/\r?\n/)
-      .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
-      .map(x => x.replace(/^"|"$/g,"")));
+  const rows=text.trim().split(/\r?\n/)
+   .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
+   .map(x => x.replace(/^"|"$/g,"")));
 
-  const headers = rows[0];
-  const hLow = headers.map(h=>h.toLowerCase());
+  const headers=rows[0];
+  const hLow=headers.map(h=>h.toLowerCase());
 
-  const teamIdx = hLow.indexOf("team");
-  const tokenIdx = hLow.indexOf("token");
+  const teamIdx=hLow.indexOf("team");
+  const tokenIdx=hLow.indexOf("token");
 
-  const roundCols = headers
+  const roundCols=headers
     .map((h,i)=>({label:h,i,nr:roundNumberFromName(h)}))
     .filter(o=>o.nr!==null)
     .sort((a,b)=>a.nr-b.nr);
 
-  const data = rows.slice(1).map(r=>{
+  const data=rows.slice(1).map(r=>{
     let total=0, rounds=[];
-    if(roundCols.length>0){
-      for(const col of roundCols){
-        const v = Number(r[col.i]||0);
-        rounds.push({ label: col.label, value: v });
-        total += v;
-      }
+    for(const col of roundCols){
+      const v = Number(r[col.i]||0);
+      total+=v;
+      rounds.push({label:col.label, value:v});
     }
-    return {
-      team: r[teamIdx]||"",
-      token:r[tokenIdx]||"",
-      total,
-      rounds
-    };
+    return {team:r[teamIdx], token:r[tokenIdx], total, rounds};
   }).filter(x=>x.team);
 
-  // ranks
-  const ranked=[...data].sort((a,b)=>b.total-a.total || a.team.localeCompare(b.team));
-  const rankMap=new Map(); let prev=null, rank=0;
-  ranked.forEach((x,i)=>{ if(prev===null||x.total<prev) rank=i+1; rankMap.set((x.token||x.team).toLowerCase(), rank); prev=x.total; });
+  const ranked=[...data].sort((a,b)=>b.total-a.total||a.team.localeCompare(b.team));
+  const rankMap=new Map();
+  let prev=null, rank=0;
+  ranked.forEach((x,i)=>{
+    if(prev===null||x.total<prev) rank=i+1;
+    rankMap.set((x.token||x.team).toLowerCase(),rank);
+    prev=x.total;
+  });
 
-  return {data, roundCols, rankMap};
+  return {data,rankMap};
 }
 
-function renderTeam(ds, key){
-  const keyLow = key.toLowerCase();
-  const item = ds.data.find(x => (x.token||x.team).toLowerCase() === keyLow);
+function renderTeam(ds,key){
+  const keyLow=key.toLowerCase();
+  const item=ds.data.find(x=>(x.token||x.team).toLowerCase()===keyLow);
 
-  const teamTitle = document.getElementById("teamTitle");
-  const roundsEl  = document.getElementById("roundList");
-  const totalEl   = document.getElementById("totalScore");
-  const rankInfo  = document.getElementById("rankInfo");
+  const title=document.getElementById("teamTitle");
+  const roundsEl=document.getElementById("roundList");
+  const totalEl=document.getElementById("totalScore");
+  const rankInfo=document.getElementById("rankInfo");
 
   if(!item){
-    teamTitle.textContent="Team niet gevonden";
+    title.textContent="Team niet gevonden";
     roundsEl.innerHTML="<p>Niet gevonden.</p>";
     return;
   }
 
-  teamTitle.textContent=item.team;
+  title.textContent=item.team;
 
-  const rk = ds.rankMap.get(keyLow) || "-";
-  rankInfo.textContent = `Positie: ${rk} / ${ds.data.length}`;
+  const rk=ds.rankMap.get(keyLow)||"-";
+  rankInfo.textContent=`Positie: ${rk} / ${ds.data.length}`;
 
-  roundsEl.innerHTML = "";
-  if(item.rounds.length===0){
-    roundsEl.innerHTML="<p>Geen rondekolommen gevonden.</p>";
-  } else {
-    const max = Math.max(...item.rounds.map(r=>r.value),1);
-    item.rounds.forEach(r=>{
-      const row=document.createElement("div");
-      row.className="row";
+  roundsEl.innerHTML="";
+  const max=Math.max(...item.rounds.map(r=>r.value),1);
 
-      const left=document.createElement("div");
-      left.textContent=r.label;
+  item.rounds.forEach(r=>{
+    const row=document.createElement("div");
+    row.className="row";
 
-      const right=document.createElement("div");
-      right.textContent=r.value;
+    const l=document.createElement("div");
+    l.textContent=r.label;
 
-      const wide=document.createElement("div");
-      wide.style.gridColumn="1/-1";
+    const v=document.createElement("div");
+    v.textContent=r.value;
 
-      const barWrap=document.createElement("div");
-      barWrap.className="bar-wrap";
+    const wide=document.createElement("div");
+    wide.style.gridColumn="1/-1";
 
-      const bar=document.createElement("div");
-      bar.className="bar";
-      bar.style.width=Math.round((r.value/max)*100)+"%";
+    const barW=document.createElement("div");
+    barW.className="bar-wrap";
+    const bar=document.createElement("div");
+    bar.className="bar";
+    bar.style.width=Math.round((r.value/max)*100)+"%";
 
-      barWrap.appendChild(bar);
-      wide.appendChild(barWrap);
+    barW.appendChild(bar);
+    wide.appendChild(barW);
 
-      row.appendChild(left);
-      row.appendChild(right);
+    row.appendChild(l);
+    row.appendChild(v);
 
-      roundsEl.appendChild(row);
-      roundsEl.appendChild(wide);
-    });
-  }
+    roundsEl.appendChild(row);
+    roundsEl.appendChild(wide);
+  });
 
   totalEl.textContent=item.total;
 }
 
 (async function(){
   const p=new URLSearchParams(location.search);
-  const token=p.get("t");
-  const team=p.get("team");
-  const key = token || team;
+  const key = p.get("t") || p.get("team");
 
   if(!key){
     document.getElementById("teamTitle").textContent="Geen team geselecteerd";
@@ -265,7 +271,7 @@ function renderTeam(ds, key){
 
   const csv=await fetchCSV(CSV_URL);
   const ds=parseCSV(csv);
-  renderTeam(ds, key);
+  renderTeam(ds,key);
 })();
 </script>
 
