@@ -9,7 +9,6 @@
     :root{
       --quiz-red:#E53935;
       --spes-green:#2E7D32;
-      --spes-green-dark:#1B5E20;
       --spes-yellow:#FDD835;
       --light-green:#A5D6A7;
 
@@ -25,9 +24,9 @@
     /* Header */
     .site-header{ background:#fff; border-bottom:4px solid var(--spes-green); padding:20px; margin-bottom:18px; }
     .brand{ max-width:1050px; margin:0 auto; display:flex; align-items:center; gap:20px; }
-    .brand__logo{ height:clamp(64px,8vw,96px); width:auto; }
+    .brand__logo{ height:clamp(72px, 9vw, 110px); width:auto; }
     .brand__titles{ display:flex; flex-direction:column; gap:4px; }
-    .brand__title{ margin:0; font-size:clamp(32px,4vw,48px); color:var(--quiz-red); font-weight:900; }
+    .brand__title{ margin:0; font-size:clamp(34px,4.4vw,50px); color:var(--quiz-red); font-weight:900; }
     .brand__subtitle{ margin:0; color:var(--muted); }
 
     .wrap{ max-width:1050px; margin:0 auto; padding:0 20px 36px; }
@@ -38,6 +37,7 @@
       border-radius:14px;
       padding:16px;
       box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
+      margin-bottom:16px;
     }
 
     .pill{ display:inline-block; padding:4px 10px; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:13px; margin-bottom:12px; }
@@ -51,6 +51,21 @@
     .back{ margin-top:18px; }
     .back a{ color:var(--spes-green); text-decoration:none; font-weight:700; }
     .back a:hover{ text-decoration:underline; }
+
+    /* Grafiek */
+    .chart{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:16px;
+      box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
+    }
+    .chart h3{ margin:0 0 8px; font-size:18px; }
+    .chart svg{ width:100%; height:240px; display:block; }
+    .axis text{ fill:#666; font-size:12px; }
+    .gridline{ stroke:#e9eaec; stroke-width:1; }
+    .rank-path{ fill:none; stroke:var(--spes-green); stroke-width:3; }
+    .rank-dot{ fill:var(--spes-green); stroke:#fff; stroke-width:1.5; }
   </style>
 </head>
 <body>
@@ -75,7 +90,12 @@
     </div>
   </div>
 
-  <p class="back">index.html">← Terug naar scorebord</a></p>
+  <div class="chart">
+    <h3>Evolutie van de positie per ronde</h3>
+    <svg id="rankChart" viewBox="0 0 820 240" preserveAspectRatio="none" aria-label="Positie per ronde"></svg>
+  </div>
+
+  <p class="back"><a href="index.html">← Terug naar scorebord</a></p>
 </div>
 
 <script>
@@ -87,7 +107,7 @@ async function fetchCSV(u){ const r=await fetch(u+"&_t="+Date.now(),{cache:"no-s
 function parseCSV(text){
   const rows = text.trim().replace(/^\uFEFF/,"").split(/\r?\n/)
     .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => x.replace(/^"|"$/g,"").trim()));
-  if(!rows.length) return {data:[], roundCols:[], rankMap:new Map()};
+  if(!rows.length) return {data:[], roundCols:[], headers:[]};
   const headers = rows[0].map(h=>h.trim());
   const hLow = headers.map(h=>h.toLowerCase());
   const teamIdx  = hLow.indexOf("team");
@@ -96,63 +116,153 @@ function parseCSV(text){
 
   const data = rows.slice(1).map(r=>{
     const team=r[teamIdx]||""; const token=r[tokenIdx]||"";
-    let total=0; const rounds=[];
-    for(const c of roundCols){ const v=Number((r[c.i]||"0").replace(",","."))||0; rounds.push({label:c.label, value:v}); total+=v; }
+    const rounds = roundCols.map(c => Number((r[c.i]||"0").replace(",","."))||0);
+    const total  = rounds.reduce((a,b)=>a+b,0);
     return {team, token, rounds, total};
   }).filter(x=>x.team);
 
-  const ranked=[...data].sort((a,b)=>b.total-a.total||a.team.localeCompare(b.team,'nl'));
-  const rankMap=new Map(); let prev=null, rank=0;
-  ranked.forEach((x,i)=>{ if(prev===null||x.total<prev) rank=i+1; rankMap.set((x.token||x.team).toLowerCase(),rank); prev=x.total; });
-
-  return {data, roundCols, rankMap};
+  return {data, roundCols, headers};
 }
 
-function renderTeam(ds, key){
-  const k = key.trim().toLowerCase();
-  const item = ds.data.find(x => (x.token||x.team).toLowerCase()===k);
-  const title = document.getElementById("teamTitle");
-  const roundsEl = document.getElementById("roundList");
-  const totalEl = document.getElementById("totalScore");
-  const rankInfo = document.getElementById("rankInfo");
+function denseRanksByTotal(items){
+  const sorted=[...items].sort((a,b)=>b.total-a.total||a.team.localeCompare(b.team,'nl'));
+  let prev=null, rank=0; const map=new Map();
+  sorted.forEach((x,i)=>{ if(prev===null||x.total<prev) rank=i+1; map.set(x.team,rank); prev=x.total; });
+  return map;
+}
 
-  if(!item){ title.textContent="Team niet gevonden"; roundsEl.innerHTML="<p>Niet gevonden.</p>"; return; }
+/* Positie per ronde (cumulatieve score tot en met ronde r) */
+function computePositionsOverRounds(dataset){
+  const {data, roundCols} = dataset;
+  const R = roundCols.length;
+  const positions = new Map(); // team => [pos_r1, pos_r2, ...]
+  // init
+  data.forEach(d => positions.set(d.team, Array(R).fill(null)));
 
-  title.textContent = item.team;
+  // cumulatieve totals per ronde
+  const cum = data.map(d => ({
+    team:d.team,
+    cum: d.rounds.reduce((acc,v,i)=>{ acc[i]=(i?acc[i-1]:0)+v; return acc; }, Array(R).fill(0))
+  }));
 
-  const rank = ds.rankMap.get(k) || "-";
-  rankInfo.textContent = `Positie: ${rank} / ${ds.data.length}`;
-
-  roundsEl.innerHTML = "";
-  if(item.rounds.length===0){
-    roundsEl.innerHTML = "<p>Geen rondekolommen gevonden.</p>";
-  }else{
-    const max = Math.max(1, ...item.rounds.map(r=>r.value));
-    item.rounds.forEach(r=>{
-      const row=document.createElement("div"); row.className="row";
-      const left=document.createElement("div"); left.textContent=r.label;
-      const right=document.createElement("div"); right.textContent=r.value;
-
-      const wide=document.createElement("div"); wide.style.gridColumn="1 / -1";
-      const barWrap=document.createElement("div"); barWrap.className="bar-wrap";
-      const bar=document.createElement("div"); bar.className="bar";
-      bar.style.width=Math.round((r.value/max)*100)+"%";
-      barWrap.appendChild(bar); wide.appendChild(barWrap);
-
-      row.appendChild(left); row.appendChild(right);
-      roundsEl.appendChild(row); roundsEl.appendChild(wide);
-    });
+  for (let r=0; r<R; r++){
+    const roundTotals = cum.map(x => ({team:x.team, total:x.cum[r]}));
+    const rankMap = denseRanksByTotal(roundTotals);
+    roundTotals.forEach(x => { positions.get(x.team)[r] = rankMap.get(x.team); });
   }
+  return positions;
+}
+
+function renderTeam(dataset, teamKey){
+  const key = teamKey.trim().toLowerCase();
+  const item = dataset.data.find(x => (x.token||x.team).toLowerCase()===key);
+  const teamTitle = document.getElementById("teamTitle");
+  const roundsEl  = document.getElementById("roundList");
+  const totalEl   = document.getElementById("totalScore");
+  const rankInfo  = document.getElementById("rankInfo");
+
+  if(!item){ teamTitle.textContent="Team niet gevonden"; roundsEl.innerHTML="<p>Niet gevonden.</p>"; return; }
+
+  teamTitle.textContent = item.team;
+
+  // Eindranking (op totaalscore)
+  const endRank = denseRanksByTotal(dataset.data.map(d=>({team:d.team,total:d.total}))).get(item.team) || "-";
+  rankInfo.textContent = `Positie: ${endRank} / ${dataset.data.length}`;
+
+  // Tabel rondes
+  roundsEl.innerHTML="";
+  const max = Math.max(1, ...item.rounds);
+  item.rounds.forEach((v,i)=>{
+    const row=document.createElement("div"); row.className="row";
+    const left=document.createElement("div"); left.textContent = dataset.roundCols[i]?.label || `R${i+1}`;
+    const right=document.createElement("div"); right.textContent = v;
+
+    const wide=document.createElement("div"); wide.style.gridColumn="1/-1";
+    const barW=document.createElement("div"); barW.className="bar-wrap";
+    const bar=document.createElement("div"); bar.className="bar"; bar.style.width = Math.round((v/max)*100)+"%";
+    barW.appendChild(bar); wide.appendChild(barW);
+
+    row.appendChild(left); row.appendChild(right);
+    roundsEl.appendChild(row); roundsEl.appendChild(wide);
+  });
   totalEl.textContent = item.total;
+
+  // Grafiek: positie per ronde (1 bovenaan)
+  const positions = computePositionsOverRounds(dataset);
+  drawRankChart("rankChart", positions.get(item.team), dataset.data.length, dataset.roundCols.map(c=>c.label));
+}
+
+function drawRankChart(svgId, posArray, nTeams, labels){
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = "";
+  if(!posArray || !posArray.length){ svg.innerHTML = "<text x='12' y='24' class='axis'>Geen data</text>"; return; }
+
+  const W=820, H=240, L=50, R=12, T=10, B=30;
+  const plotW=W-L-R, plotH=H-T-B;
+
+  // helpers
+  const x = (i)=> L + (posArray.length<=1? plotW/2 : (i*(plotW/(posArray.length-1))));
+  const y = (rank)=> T + ( (rank-1) * (plotH/Math.max(1,(nTeams-1))) );
+
+  // gridlines (horizontaal: ranks 1..n)
+  for(let r=1; r<=Math.min(nTeams,10); r++){
+    const yy=y(r);
+    const gl = document.createElementNS("http://www.w3.org/2000/svg","line");
+    gl.setAttribute("x1", L); gl.setAttribute("y1", yy);
+    gl.setAttribute("x2", W-R); gl.setAttribute("y2", yy);
+    gl.setAttribute("class","gridline");
+    svg.appendChild(gl);
+
+    const lt = document.createElementNS("http://www.w3.org/2000/svg","text");
+    lt.setAttribute("x", 8); lt.setAttribute("y", yy+4);
+    lt.setAttribute("class","axis");
+    lt.textContent = r;
+    svg.appendChild(lt);
+  }
+
+  // x-as labels (rondes)
+  labels.forEach((lab,i)=>{
+    const tx = document.createElementNS("http://www.w3.org/2000/svg","text");
+    tx.setAttribute("x", x(i)); tx.setAttribute("y", H-8);
+    tx.setAttribute("text-anchor","middle");
+    tx.setAttribute("class","axis");
+    tx.textContent = lab;
+    svg.appendChild(tx);
+  });
+
+  // lijnpad
+  let d = "";
+  posArray.forEach((rank,i)=>{
+    const xi=x(i), yi=y(rank);
+    d += (i===0? `M ${xi} ${yi}` : ` L ${xi} ${yi}`);
+  });
+  const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+  path.setAttribute("class","rank-path");
+  path.setAttribute("d", d);
+  svg.appendChild(path);
+
+  // punten
+  posArray.forEach((rank,i)=>{
+    const ci = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    ci.setAttribute("class","rank-dot");
+    ci.setAttribute("cx", x(i)); ci.setAttribute("cy", y(rank)); ci.setAttribute("r","4.5");
+    svg.appendChild(ci);
+  });
 }
 
 (async function(){
   const p = new URLSearchParams(location.search);
-  const key = p.get("t") || p.get("team");
+  const key = (p.get("t") || p.get("team") || "").trim();
   if(!key){ document.getElementById("teamTitle").textContent="Geen team geselecteerd"; return; }
-  const csv = await fetchCSV(CSV_URL);
-  const ds = parseCSV(csv);
-  renderTeam(ds, key);
+
+  try{
+    const csv = await fetchCSV(CSV_URL);
+    const ds = parseCSV(csv);
+    renderTeam(ds, key);
+  }catch(e){
+    document.getElementById("teamTitle").textContent="Fout bij laden";
+    console.error(e);
+  }
 })();
 </script>
 </body>

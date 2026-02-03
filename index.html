@@ -21,9 +21,9 @@
       --muted:#60666d;
       --line:#e1e2e5;
 
-      /* Badges */
-      --rank-default-bg:#D9EBD9;   /* zachte variant van groen */
-      --rank-default-fg:#1B5E20;   /* donker groen voor cijfer */
+      /* Badges (niet‑podium) */
+      --rank-default-bg:#CFE8CF;   /* zachte variant van groen */
+      --rank-default-fg:#1B5E20;   /* donker groen */
     }
 
     body{ margin:0; background:var(--bg); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
@@ -31,14 +31,14 @@
     /* Header */
     .site-header{ background:#fff; border-bottom:4px solid var(--spes-green); padding:20px; }
     .brand{ max-width:1050px; margin:0 auto; display:flex; align-items:center; gap:20px; }
-    .brand__logo{ height:clamp(64px,8vw,96px); width:auto; object-fit:contain; }
+    .brand__logo{ height:clamp(72px, 9vw, 110px); width:auto; object-fit:contain; }
     .brand__titles{ display:flex; flex-direction:column; gap:4px; }
-    .brand__title{ margin:0; font-size:clamp(32px,4vw,48px); color:var(--quiz-red); font-weight:900; line-height:1.1; }
+    .brand__title{ margin:0; font-size:clamp(34px,4.4vw,50px); color:var(--quiz-red); font-weight:900; line-height:1.1; }
     .brand__subtitle{ margin:0; color:var(--muted); }
 
     /* Actions */
     .actions{ max-width:1050px; margin:16px auto; padding:0 20px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
-    .btn{ padding:10px 16px; border-radius:10px; border:2px solid transparent; font-size:15px; font-weight:600; cursor:pointer; transition:.2s; }
+    .btn{ padding:10px 16px; border-radius:10px; border:2px solid transparent; font-size:15px; font-weight:600; cursor:pointer; transition:.18s; }
     .btn-primary{ background:var(--spes-green); color:#fff; }
     .btn-secondary{ background:#fff; border:2px solid var(--light-green); color:var(--spes-green); }
     .btn:disabled{ opacity:.6; cursor:not-allowed; }
@@ -49,11 +49,11 @@
     .wrap{ max-width:1050px; margin:0 auto; padding:0 20px 40px; }
     .grid{ display:grid; gap:14px; }
 
-    /* Kaart in kolommen:
-       [ rank | teamnaam | balk | score ] */
+    /* Kaart in kolommen: [ rank | teamnaam | balk | score ]  */
     .card{
       display:grid;
-      grid-template-columns: 64px minmax(180px, 1.6fr) 4fr 70px;
+      /* Teamkolom flink breder, balkkolom korter */
+      grid-template-columns: 72px minmax(260px, 3.2fr) 2.2fr 72px;
       align-items:center;
       gap:14px;
       background:var(--card);
@@ -65,30 +65,30 @@
 
     /* Rang-badge */
     .place{
-      width:48px; height:48px; border-radius:12px;
+      width:52px; height:52px; border-radius:12px;
       display:grid; place-items:center;
       font-weight:800; font-size:20px;
       color:var(--rank-default-fg);
       background:var(--rank-default-bg);
-      border:2px solid #cfe2cf;
+      border:2px solid #bfe0bf;
       justify-self:center;
     }
     .place.gold  { background:linear-gradient(135deg, var(--spes-yellow), #ffb300); color:#333; border:none; }
     .place.silver{ background:linear-gradient(135deg, #e0e0e0, #bdbdbd); color:#333; border:none; }
     .place.bronze{ background:linear-gradient(135deg, #ffcc80, #fb8c00); color:#333; border:none; }
 
-    /* Teamnaam – enkel-lijn, ellipsis, iets flexibeler font */
+    /* Teamnaam – enkel-lijn + ellipsis, iets compacter font */
     .team{
       font-weight:800;
-      font-size:clamp(16px, 2.1vw, 20px);
+      font-size:clamp(15px, 1.8vw, 20px);
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
     .team a{ color:var(--text); text-decoration:none; }
     .team a:hover{ text-decoration:underline; }
 
-    /* Balk – korter omdat hij zijn eigen kolom heeft */
+    /* Balk – korter omdat hij zijn eigen (smallere) kolom heeft */
     .bar-wrap{ width:100%; height:10px; background:#efefef; border-radius:999px; overflow:hidden; }
-    .bar{ height:100%; width:0%; background:var(--spes-green); transition:width .5s ease; }
+    .bar{ height:100%; width:0%; background:var(--spes-green); transition:width .45s ease; }
 
     .score{ text-align:right; font-size:22px; font-weight:800; color:var(--text); }
   </style>
@@ -112,7 +112,7 @@
   <button id="btnReset" class="btn btn-secondary">Reset</button>
 </div>
 
-<div id="meta">Laden…</div>
+<div id="meta">Nog geen teams getoond</div>
 
 <div class="wrap"><div id="list" class="grid"></div></div>
 
@@ -124,6 +124,8 @@ const REFRESH_MS = 5000;
 /* === STATE === */
 let fullData = [];
 let visibleCount = 0;
+/* nieuw: handmatige ‘leeg’ modus; ook op initial load true */
+let manualCleared = true;
 
 /* Helpers */
 function roundNumberFromName(n){ const m = String(n).toLowerCase().match(/r(?:onde)?\s*(\d+)/); return m?parseInt(m[1],10):null; }
@@ -161,7 +163,15 @@ function computeRanks(list){
 
 function render(list){
   const root = document.getElementById("list");
+  const meta = document.getElementById("meta");
   root.innerHTML = "";
+
+  if (manualCleared) {
+    meta.textContent = "Nog geen teams getoond";
+    updateButtons();
+    return; // niets tonen tot gebruiker kiest
+  }
+
   const toShow = list.slice(-visibleCount);
   const max = Math.max(1, ...toShow.map(x=>x.total));
 
@@ -202,14 +212,25 @@ function render(list){
     root.appendChild(card);
   });
 
-  const meta = document.getElementById("meta");
-  meta.textContent = (toShow.length ? `Getoond: ${toShow.length}/${list.length} – ` : "")
+  meta.textContent = (toShow.length ? `Getoond: ${toShow.length}/${list.length} – ` : "Nog geen teams getoond – ")
                    + "Laatst bijgewerkt: " + new Date().toLocaleTimeString();
 
-  btnAdd.disabled   = visibleCount >= list.length;
-  btnUndo.disabled  = visibleCount <= 0;
-  btnAll.disabled   = visibleCount >= list.length;
-  btnReset.disabled = visibleCount <= 0;
+  updateButtons();
+}
+
+function updateButtons(){
+  const add = document.getElementById("btnAdd");
+  const undo= document.getElementById("btnUndo");
+  const all = document.getElementById("btnAll");
+  const rst = document.getElementById("btnReset");
+  if (manualCleared){
+    add.disabled=false; all.disabled=false; undo.disabled=true; rst.disabled=false;
+  } else {
+    add.disabled   = visibleCount >= fullData.length;
+    undo.disabled  = visibleCount <= 0;
+    all.disabled   = visibleCount >= fullData.length;
+    rst.disabled   = false;
+  }
 }
 
 async function tick(){
@@ -227,17 +248,29 @@ async function tick(){
 }
 
 /* Controls */
-const btnAdd=document.getElementById("btnAdd");
-const btnUndo=document.getElementById("btnUndo");
-const btnAll=document.getElementById("btnAll");
-const btnReset=document.getElementById("btnReset");
+document.getElementById("btnAdd").onclick  = ()=>{
+  manualCleared = false;
+  visibleCount = Math.min(visibleCount+1, fullData.length);
+  render(fullData);
+};
+document.getElementById("btnUndo").onclick = ()=>{
+  if (manualCleared) return;
+  visibleCount = Math.max(visibleCount-1, 0);
+  render(fullData);
+};
+document.getElementById("btnAll").onclick  = ()=>{
+  manualCleared = false;
+  visibleCount = fullData.length;
+  render(fullData);
+};
+document.getElementById("btnReset").onclick= ()=>{
+  manualCleared = true;
+  visibleCount = 0;
+  render(fullData);  // scherm volledig leeg
+};
 
-btnAdd.onclick  = ()=>{ visibleCount = Math.min(visibleCount+1, fullData.length); render(fullData); };
-btnUndo.onclick = ()=>{ visibleCount = Math.max(visibleCount-1, 0); render(fullData); };
-btnAll.onclick  = ()=>{ visibleCount = fullData.length; render(fullData); };
-btnReset.onclick= ()=>{ visibleCount = 0; render(fullData); };
-
-/* Start */
+/* Start: leeg scherm tot gebruiker kiest */
+render(fullData);
 tick();
 </script>
 </body>
