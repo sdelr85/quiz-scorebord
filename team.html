@@ -1,132 +1,63 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Quiz Nostra – Teamdetail</title>
 
-<style>
-  :root {
-    --quiz-red:#E53935;
-    --spes-green:#2E7D32;
-    --spes-yellow:#FDD835;
-    --light-green:#A5D6A7;
+  <style>
+    :root{
+      --quiz-red:#E53935;
+      --spes-green:#2E7D32;
+      --spes-green-dark:#1B5E20;
+      --spes-yellow:#FDD835;
+      --light-green:#A5D6A7;
 
-    --bg:#f6f7f8;
-    --card:#ffffff;
-    --text:#222;
-    --muted:#60666d;
-    --line:#e1e2e5;
-    --rank-default:#d5d7db;
-  }
+      --bg:#f6f7f8;
+      --card:#fff;
+      --text:#222;
+      --muted:#60666d;
+      --line:#e1e2e5;
+    }
 
-  body {
-    margin:0;
-    background:var(--bg);
-    font-family: system-ui,"Segoe UI",Roboto,Arial,sans-serif;
-  }
+    body{ margin:0; background:var(--bg); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
 
-  /* Header */
-  .site-header {
-    background:white;
-    border-bottom:4px solid var(--spes-green);
-    padding:20px;
-    margin-bottom:20px;
-  }
+    /* Header */
+    .site-header{ background:#fff; border-bottom:4px solid var(--spes-green); padding:20px; margin-bottom:18px; }
+    .brand{ max-width:1050px; margin:0 auto; display:flex; align-items:center; gap:20px; }
+    .brand__logo{ height:clamp(64px,8vw,96px); width:auto; }
+    .brand__titles{ display:flex; flex-direction:column; gap:4px; }
+    .brand__title{ margin:0; font-size:clamp(32px,4vw,48px); color:var(--quiz-red); font-weight:900; }
+    .brand__subtitle{ margin:0; color:var(--muted); }
 
-  .brand {
-    max-width:1050px;
-    margin:0 auto;
-    display:flex;
-    gap:20px;
-    align-items:center;
-  }
+    .wrap{ max-width:1050px; margin:0 auto; padding:0 20px 36px; }
 
-  .brand__logo {
-    height: clamp(60px,8vw,90px);
-    width:auto;
-  }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:16px;
+      box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
+    }
 
-  .brand__titles {
-    display:flex;
-    flex-direction:column;
-    gap:4px;
-  }
+    .pill{ display:inline-block; padding:4px 10px; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:13px; margin-bottom:12px; }
 
-  .brand__title {
-    margin:0;
-    font-size:clamp(32px,4vw,48px);
-    color:var(--quiz-red);
-    font-weight:900;
-  }
+    .row{ display:grid; grid-template-columns: 1fr auto; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line); }
+    .row:last-child{ border-bottom:none; }
 
-  .brand__subtitle {
-    margin:0;
-    color:var(--muted);
-  }
+    .bar-wrap{ width:100%; height:10px; background:#efefef; border-radius:999px; overflow:hidden; margin-top:4px; }
+    .bar{ height:100%; width:0%; background:var(--spes-green); transition:width .4s ease; }
 
-  /* Content */
-  .wrap {
-    max-width:1050px;
-    margin:0 auto;
-    padding:0 20px 40px;
-  }
-
-  .card {
-    background:var(--card);
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:16px;
-    box-shadow:0 2px 2px rgba(0,0,0,0.03),
-               0 5px 14px rgba(0,0,0,0.05);
-  }
-
-  .pill {
-    display:inline-block;
-    padding:4px 10px;
-    border-radius:999px;
-    border:1px solid var(--line);
-    color:var(--muted);
-    margin-bottom:12px;
-    font-size:13px;
-  }
-
-  .row {
-    display:grid;
-    grid-template-columns:1fr auto;
-    gap:10px;
-    align-items:center;
-    padding:8px 0;
-    border-bottom:1px dashed var(--line);
-  }
-  .row:last-child { border-bottom:none; }
-
-  .bar-wrap {
-    width:100%;
-    height:8px;
-    background:#efefef;
-    border-radius:999px;
-    overflow:hidden;
-    margin-top:4px;
-  }
-
-  .bar {
-    height:100%;
-    background:var(--spes-green);
-    width:0%;
-    transition:0.4s ease;
-  }
-
-  a { color:var(--spes-green); text-decoration:none; }
-  a:hover { text-decoration:underline; }
-</style>
+    .back{ margin-top:18px; }
+    .back a{ color:var(--spes-green); text-decoration:none; font-weight:700; }
+    .back a:hover{ text-decoration:underline; }
+  </style>
 </head>
-
 <body>
 
 <header class="site-header">
   <div class="brand">
-    assets/ouderraad-logo.png
+    <img src="assets/ouderraad-logo.png" alt="Ouderraad Spes Nostra Kuurne" class="brand__logo">
     <div class="brand__titles">
       <h1 class="brand__title" id="teamTitle">Team</h1>
       <p class="brand__subtitle">Detailoverzicht</p>
@@ -138,142 +69,91 @@
 
   <div class="card">
     <div id="rankInfo" class="pill">Positie: -</div>
-
     <div id="roundList"></div>
-
-    <div style="display:flex; justify-content:space-between; margin-top:14px; font-weight:800;">
-      <span>Totaal</span>
-      <span id="totalScore">0</span>
+    <div style="display:flex; justify-content:space-between; margin-top:12px; font-weight:800;">
+      <span>Totaal</span><span id="totalScore">0</span>
     </div>
   </div>
 
-  <p style="margin-top:20px">
-    scorebord.html">← Terug naar scorebord</a>
-  </p>
-
+  <p class="back">index.html">← Terug naar scorebord</a></p>
 </div>
 
 <script>
-const CSV_URL =
- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvii1ZbzYpDcsoG8qONnw5w5MogMDWmwTNzCd7KhQ9kFw94jTGlWIWy6Vt-JsHsJokY/pub?gid=0&single=true&output=csv";
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvii1ZbzYpDcsoG8qONnw5w5MogMDWmwTNzCd7KhQ9kFw94jTGlWIWy6Vt-JsHsJokY/pub?gid=0&single=true&output=csv";
 
-function roundNumberFromName(n){
-  const m=n.toLowerCase().match(/r(?:onde)?\s*(\d+)/);
-  return m ? parseInt(m[1]) : null;
-}
-
-async function fetchCSV(url){
-  const r=await fetch(url+"&_t="+Date.now(),{cache:"no-store"});
-  return await r.text();
-}
+function roundNumberFromName(n){ const m=String(n).toLowerCase().match(/r(?:onde)?\s*(\d+)/); return m?parseInt(m[1],10):null; }
+async function fetchCSV(u){ const r=await fetch(u+"&_t="+Date.now(),{cache:"no-store"}); if(!r.ok) throw new Error("CSV ophalen mislukt"); return await r.text(); }
 
 function parseCSV(text){
-  const rows=text.trim().split(/\r?\n/)
-   .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
-   .map(x => x.replace(/^"|"$/g,"")));
+  const rows = text.trim().replace(/^\uFEFF/,"").split(/\r?\n/)
+    .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => x.replace(/^"|"$/g,"").trim()));
+  if(!rows.length) return {data:[], roundCols:[], rankMap:new Map()};
+  const headers = rows[0].map(h=>h.trim());
+  const hLow = headers.map(h=>h.toLowerCase());
+  const teamIdx  = hLow.indexOf("team");
+  const tokenIdx = hLow.indexOf("token");
+  const roundCols = headers.map((h,i)=>({label:h,i,nr:roundNumberFromName(h)})).filter(o=>o.nr!==null).sort((a,b)=>a.nr-b.nr);
 
-  const headers=rows[0];
-  const hLow=headers.map(h=>h.toLowerCase());
-
-  const teamIdx=hLow.indexOf("team");
-  const tokenIdx=hLow.indexOf("token");
-
-  const roundCols=headers
-    .map((h,i)=>({label:h,i,nr:roundNumberFromName(h)}))
-    .filter(o=>o.nr!==null)
-    .sort((a,b)=>a.nr-b.nr);
-
-  const data=rows.slice(1).map(r=>{
-    let total=0, rounds=[];
-    for(const col of roundCols){
-      const v = Number(r[col.i]||0);
-      total+=v;
-      rounds.push({label:col.label, value:v});
-    }
-    return {team:r[teamIdx], token:r[tokenIdx], total, rounds};
+  const data = rows.slice(1).map(r=>{
+    const team=r[teamIdx]||""; const token=r[tokenIdx]||"";
+    let total=0; const rounds=[];
+    for(const c of roundCols){ const v=Number((r[c.i]||"0").replace(",","."))||0; rounds.push({label:c.label, value:v}); total+=v; }
+    return {team, token, rounds, total};
   }).filter(x=>x.team);
 
-  const ranked=[...data].sort((a,b)=>b.total-a.total||a.team.localeCompare(b.team));
-  const rankMap=new Map();
-  let prev=null, rank=0;
-  ranked.forEach((x,i)=>{
-    if(prev===null||x.total<prev) rank=i+1;
-    rankMap.set((x.token||x.team).toLowerCase(),rank);
-    prev=x.total;
-  });
+  const ranked=[...data].sort((a,b)=>b.total-a.total||a.team.localeCompare(b.team,'nl'));
+  const rankMap=new Map(); let prev=null, rank=0;
+  ranked.forEach((x,i)=>{ if(prev===null||x.total<prev) rank=i+1; rankMap.set((x.token||x.team).toLowerCase(),rank); prev=x.total; });
 
-  return {data,rankMap};
+  return {data, roundCols, rankMap};
 }
 
-function renderTeam(ds,key){
-  const keyLow=key.toLowerCase();
-  const item=ds.data.find(x=>(x.token||x.team).toLowerCase()===keyLow);
+function renderTeam(ds, key){
+  const k = key.trim().toLowerCase();
+  const item = ds.data.find(x => (x.token||x.team).toLowerCase()===k);
+  const title = document.getElementById("teamTitle");
+  const roundsEl = document.getElementById("roundList");
+  const totalEl = document.getElementById("totalScore");
+  const rankInfo = document.getElementById("rankInfo");
 
-  const title=document.getElementById("teamTitle");
-  const roundsEl=document.getElementById("roundList");
-  const totalEl=document.getElementById("totalScore");
-  const rankInfo=document.getElementById("rankInfo");
+  if(!item){ title.textContent="Team niet gevonden"; roundsEl.innerHTML="<p>Niet gevonden.</p>"; return; }
 
-  if(!item){
-    title.textContent="Team niet gevonden";
-    roundsEl.innerHTML="<p>Niet gevonden.</p>";
-    return;
+  title.textContent = item.team;
+
+  const rank = ds.rankMap.get(k) || "-";
+  rankInfo.textContent = `Positie: ${rank} / ${ds.data.length}`;
+
+  roundsEl.innerHTML = "";
+  if(item.rounds.length===0){
+    roundsEl.innerHTML = "<p>Geen rondekolommen gevonden.</p>";
+  }else{
+    const max = Math.max(1, ...item.rounds.map(r=>r.value));
+    item.rounds.forEach(r=>{
+      const row=document.createElement("div"); row.className="row";
+      const left=document.createElement("div"); left.textContent=r.label;
+      const right=document.createElement("div"); right.textContent=r.value;
+
+      const wide=document.createElement("div"); wide.style.gridColumn="1 / -1";
+      const barWrap=document.createElement("div"); barWrap.className="bar-wrap";
+      const bar=document.createElement("div"); bar.className="bar";
+      bar.style.width=Math.round((r.value/max)*100)+"%";
+      barWrap.appendChild(bar); wide.appendChild(barWrap);
+
+      row.appendChild(left); row.appendChild(right);
+      roundsEl.appendChild(row); roundsEl.appendChild(wide);
+    });
   }
-
-  title.textContent=item.team;
-
-  const rk=ds.rankMap.get(keyLow)||"-";
-  rankInfo.textContent=`Positie: ${rk} / ${ds.data.length}`;
-
-  roundsEl.innerHTML="";
-  const max=Math.max(...item.rounds.map(r=>r.value),1);
-
-  item.rounds.forEach(r=>{
-    const row=document.createElement("div");
-    row.className="row";
-
-    const l=document.createElement("div");
-    l.textContent=r.label;
-
-    const v=document.createElement("div");
-    v.textContent=r.value;
-
-    const wide=document.createElement("div");
-    wide.style.gridColumn="1/-1";
-
-    const barW=document.createElement("div");
-    barW.className="bar-wrap";
-    const bar=document.createElement("div");
-    bar.className="bar";
-    bar.style.width=Math.round((r.value/max)*100)+"%";
-
-    barW.appendChild(bar);
-    wide.appendChild(barW);
-
-    row.appendChild(l);
-    row.appendChild(v);
-
-    roundsEl.appendChild(row);
-    roundsEl.appendChild(wide);
-  });
-
-  totalEl.textContent=item.total;
+  totalEl.textContent = item.total;
 }
 
 (async function(){
-  const p=new URLSearchParams(location.search);
+  const p = new URLSearchParams(location.search);
   const key = p.get("t") || p.get("team");
-
-  if(!key){
-    document.getElementById("teamTitle").textContent="Geen team geselecteerd";
-    return;
-  }
-
-  const csv=await fetchCSV(CSV_URL);
-  const ds=parseCSV(csv);
-  renderTeam(ds,key);
+  if(!key){ document.getElementById("teamTitle").textContent="Geen team geselecteerd"; return; }
+  const csv = await fetchCSV(CSV_URL);
+  const ds = parseCSV(csv);
+  renderTeam(ds, key);
 })();
 </script>
-
 </body>
 </html>
