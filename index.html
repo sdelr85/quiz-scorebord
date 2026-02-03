@@ -1,65 +1,52 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Quiz Nostra — Scorebord</title>
-
-<!--
-  Kleuren gebaseerd op de poster:
-  - Quiz rood:       #E53935
-  - Spes groen:      #2E7D32
-  - Licht groen:     #A5D6A7
-  - Accent geel:     #FDD835
-  - Zachte grijs:    #f6f7f8 achtergrond
-  - Tekst donker:    #222
--->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz Nostra – Scorebord</title>
 
 <style>
   :root {
+    /* Branding colors */
     --quiz-red: #E53935;
     --spes-green: #2E7D32;
-    --spes-green-600: #1b5e20;
+    --spes-green-dark: #1B5E20;
+    --spes-yellow: #FDD835;
     --light-green: #A5D6A7;
-    --accent-yellow: #FDD835;
+
+    /* UI */
     --bg: #f6f7f8;
     --card: #ffffff;
     --text: #222;
     --muted: #60666d;
-    --line: #e6e8eb;
-    --link: #1e88e5;
+    --line: #e1e2e5;
   }
-
-  * { box-sizing: border-box; }
 
   body {
     margin: 0;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    color: var(--text);
     background: var(--bg);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   }
 
   /* Header */
   .site-header {
-    background: linear-gradient(0deg, #ffffff, #ffffff),
-                radial-gradient(1200px 600px at 10% -10%, rgba(165,214,167,0.25), transparent 60%),
-                radial-gradient(1000px 500px at 90% -20%, rgba(253,216,53,0.18), transparent 60%);
+    background: white;
     border-bottom: 4px solid var(--spes-green);
-    padding: 16px 20px;
+    padding: 18px 20px;
   }
 
   .brand {
+    max-width: 1050px;
+    margin: 0 auto;
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 12px 16px;
+    gap: 14px 18px;
     align-items: center;
-    max-width: 1100px;
-    margin: 0 auto;
   }
 
   .brand__logo {
-    width: 64px;
-    height: 64px;
+    height: 70px;
+    width: 70px;
     object-fit: contain;
   }
 
@@ -69,174 +56,284 @@
     gap: 4px;
   }
 
-  .brand__kicker {
-    color: var(--spes-green-600);
-    font-weight: 700;
-    letter-spacing: .02em;
-    font-size: 13px;
-    text-transform: uppercase;
-  }
-
   .brand__title {
     margin: 0;
     font-size: clamp(28px, 4vw, 44px);
-    line-height: 1.1;
-    font-weight: 900;
     color: var(--quiz-red);
+    font-weight: 900;
+    line-height: 1.1;
   }
 
   .brand__subtitle {
-    margin: 0;
     color: var(--muted);
-    font-size: 14px;
+    margin: 0;
   }
 
-  /* Actions */
+  /* Buttons */
   .actions {
-    max-width: 1100px;
-    margin: 16px auto;
+    max-width: 1050px;
+    margin: 20px auto;
     padding: 0 20px;
     display: flex;
-    flex-wrap: wrap;
     gap: 12px;
-    align-items: center;
     justify-content: center;
   }
 
   .btn {
-    padding: 10px 16px;
-    font-size: 16px;
+    padding: 10px 18px;
     border-radius: 10px;
     border: 2px solid transparent;
+    font-size: 16px;
     cursor: pointer;
-    transition: transform .04s ease, box-shadow .2s ease;
-    box-shadow: 0 2px 0 rgba(0,0,0,0.08);
+    transition: all 150ms;
+    font-weight: 600;
   }
-  .btn:active { transform: translateY(1px); }
 
-  .btn--primary {
+  .btn-primary {
     background: var(--spes-green);
-    color: #fff;
+    color: white;
   }
-  .btn--primary:hover { filter: brightness(1.03); }
 
-  .btn--secondary {
-    background: #fff;
+  .btn-secondary {
+    background: white;
+    border: 2px solid var(--light-green);
     color: var(--spes-green);
-    border-color: var(--light-green);
   }
 
   .btn:disabled {
-    opacity: .6;
+    opacity: 0.6;
     cursor: not-allowed;
   }
 
-  /* Status */
-  .status {
-    max-width: 1100px;
-    margin: 0 auto 8px;
-    padding: 0 20px;
-    color: var(--muted);
+  /* Status text */
+  #meta {
     text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 14px;
   }
-  .status.error { color: var(--quiz-red); }
 
-  /* Table card */
+  /* Scoreboard list */
+  .wrap {
+    max-width: 1050px;
+    margin: 0 auto;
+    padding: 0 20px 40px;
+  }
+
+  .grid {
+    display: grid;
+    gap: 14px;
+  }
+
   .card {
-    max-width: 1100px;
-    margin: 12px auto 40px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 14px;
+    padding: 14px 16px;
     box-shadow:
-      0 1px 2px rgba(0,0,0,0.04),
-      0 6px 18px rgba(0,0,0,0.05);
+      0 2px 2px rgba(0,0,0,0.03),
+      0 5px 14px rgba(0,0,0,0.05);
+  }
+
+  /* Rank badges */
+  .place {
+    min-width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 20px;
+    background: linear-gradient(135deg, var(--spes-yellow), #ffb300);
+    color: #333;
+  }
+  .place.silver {
+    background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
+  }
+  .place.bronze {
+    background: linear-gradient(135deg, #ffcc80, #fb8c00);
+  }
+
+  /* Team name / link */
+  .team {
+    flex: 1;
+    font-weight: 700;
+    font-size: 20px;
+  }
+
+  .team a {
+    color: var(--text);
+    text-decoration: none;
+  }
+  .team a:hover {
+    text-decoration: underline;
+  }
+
+  /* Progress bars */
+  .bar-wrap {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: #efefef;
     overflow: hidden;
   }
 
-  .card__bar {
-    height: 6px;
-    background: linear-gradient(90deg, var(--spes-green), var(--light-green), var(--accent-yellow));
+  .bar {
+    height: 100%;
+    width: 0%;
+    background: var(--spes-green);
+    transition: width 0.5s ease;
   }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  thead th {
-    text-align: center;
-    padding: 14px 10px;
-    background: #f9fafb;
-    color: var(--spes-green-600);
+  .score {
+    font-size: 22px;
     font-weight: 700;
-    border-bottom: 1px solid var(--line);
+    width: 60px;
+    text-align: right;
+    color: var(--text);
   }
 
-  tbody td {
-    text-align: center;
-    padding: 14px 10px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  tbody tr:nth-child(even) td {
-    background: #fcfdfc;
-  }
-
-  tbody tr.hidden { display: none; }
-
-  /* Links */
-  a { color: var(--link); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-
-  /* Small helper label under title */
-  .pill {
-    display: inline-block;
-    background: #fff;
-    color: var(--spes-green-600);
-    border: 1px solid var(--light-green);
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-    margin-left: 8px;
-  }
-
-  /* Footer hint */
-  .footer-hint {
-    max-width: 1100px;
-    margin: 16px auto 40px;
-    padding: 0 20px;
-    color: var(--muted);
-    font-size: 13px;
-    text-align: center;
-  }
 </style>
 </head>
+
 <body>
 
-<header class="site-header" role="banner">
+<header class="site-header">
   <div class="brand">
-    <!-- Update the src to the correct path in your repo -->
-    <img src="assets/ouderraad-logo.png" alt="Spes Nostra Kuurne O  <div class="brand__kicker">Spes Nostra Kuurne <span class="pill">Ouderraad</span></div>
-      <h1 class="brand__title">Quiz Nostra</h1>
-      <p class="brand__subtitle">Scorebord — live ranking per team</p>
+    <img src="assets/ouderraad-logo.png" alt="Ouderraad Spes Nostra Kuurne"ss="brand__title">Quiz Nostra</h1>
+      <p class="brand__subtitle">Live Scorebord</p>
     </div>
   </div>
 </header>
 
-<div class="actions" role="group" aria-label="Bediening scorebord">
-  <button id="revealBtn" class="btn btn--primary" disabled>Volgende team</button>
-  <button id="revealAllBtn" class="btn btn--secondary" disabled>Toon alle teams</button>
+<div id="meta">Laden…</div>
+
+<div class="wrap">
+  <div id="list" class="grid"></div>
 </div>
 
-<div id="status" class="status">Gegevens laden…</div>
+<script>
+/* === CONFIG === */
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvii1ZbzYpDcsoG8qONnw5w5MogMDWmwTNzCd7KhQ9kFw94jTGlWIWy6Vt-JsHsJokY/pub?gid=0&single=true&output=csv";
+const REFRESH_MS = 5000;
 
-<section class="card" aria-label="Scorebord">
-  <div class="card__bar" aria-hidden="true"></div>
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Team</th>
-        <th>Totaal</th>
+/* === Helpers === */
+function roundNumberFromName(name) {
+  const m = String(name).toLowerCase().match(/r(?:onde)?\s*(\d+)/i);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+async function fetchCSV(url) {
+  const res = await fetch(url + "&_t=" + Date.now(), { cache: "no-store" });
+  return await res.text();
+}
+
+function parseCSV(text) {
+  const rows = text.trim()
+    .replace(/^\uFEFF/, "")
+    .split(/\r?\n/)
+    .map(r => r.split(",").map(x => x.replace(/^"|"$/g, "").trim()));
+
+  const headers = rows[0].map(h => h.trim());
+  const hLow = headers.map(h => h.toLowerCase());
+
+  const teamIdx = hLow.indexOf("team");
+  const tokenIdx = hLow.indexOf("token");
+
+  const roundCols = headers
+    .map((h,i) => ({ label: h, i, nr: roundNumberFromName(h) }))
+    .filter(o => o.nr !== null)
+    .sort((a,b) => a.nr - b.nr);
+
+  const data = rows.slice(1).map(r => {
+    const team = r[teamIdx] || "";
+    const token = r[tokenIdx] || "";
+    let total = 0;
+
+    if (roundCols.length > 0) {
+      for (const col of roundCols) {
+        total += Number(r[col.i] || 0);
+      }
+    }
+
+    return { team, token, total };
+  });
+
+  return data.filter(x => x.team);
+}
+
+function computeRanks(list) {
+  list.sort((a,b) => b.total - a.total || a.team.localeCompare(b.team));
+  let prev = null, rank = 0;
+  list.forEach((x,i) => {
+    if (prev === null || x.total < prev) rank = i + 1;
+    x.rank = rank;
+    prev = x.total;
+  });
+  return list;
+}
+
+function render(list) {
+  const root = document.getElementById("list");
+  root.innerHTML = "";
+
+  const max = Math.max(1, ...list.map(x => x.total));
+
+  list.forEach(row => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const place = document.createElement("div");
+    place.className = "place";
+    if(row.rank === 2) place.classList.add("silver");
+    if(row.rank === 3) place.classList.add("bronze");
+    place.textContent = row.rank;
+
+    const name = document.createElement("div");
+    name.className = "team";
+    name.innerHTML = `<a href="team.html?team=${encodeURIComponent(row.team)}m}</a>`;
+
+    const barWrap = document.createElement("div");
+    barWrap.className = "bar-wrap";
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    bar.style.width = Math.round((row.total / max) * 100) + "%";
+    barWrap.appendChild(bar);
+
+    const score = document.createElement("div");
+    score.className = "score";
+    score.textContent = row.total;
+
+    card.appendChild(place);
+    card.appendChild(name);
+    card.appendChild(barWrap);
+    card.appendChild(score);
+
+    root.appendChild(card);
+  });
+
+  document.getElementById("meta").textContent =
+    "Laatst bijgewerkt: " + new Date().toLocaleTimeString();
+}
+
+async function tick() {
+  try {
+    const csv = await fetchCSV(CSV_URL);
+    const data = parseCSV(csv);
+    const ranked = computeRanks(data);
+    render(ranked);
+  } catch (e) {
+    console.error(e);
+  } finally {
+    setTimeout(tick, REFRESH_MS);
+  }
+}
+
+tick();
+</script>
+
+</body>
+</html>

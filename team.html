@@ -1,49 +1,223 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
-<title>Team details</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Teamresultaat – Quiz Nostra</title>
+
 <style>
-  body { font-family:sans-serif; background:#111; color:#fff; }
-  table { margin:auto; border-collapse:collapse; }
-  td, th { padding:8px 12px; border-bottom:1px solid #333; }
+  :root {
+    --quiz-red: #E53935;
+    --spes-green: #2E7D32;
+    --spes-yellow: #FDD835;
+    --bg: #f6f7f8;
+    --card: #ffffff;
+    --text: #222;
+    --muted: #60666d;
+    --line: #e1e2e5;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    font-family: system-ui;
+    color: var(--text);
+  }
+
+  .site-header {
+    background: white;
+    border-bottom: 4px solid var(--spes-green);
+    padding: 18px 20px;
+  }
+
+  .brand {
+    max-width: 1050px;
+    margin: 0 auto;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .brand__logo {
+    height: 70px;
+    width: 70px;
+    object-fit: contain;
+  }
+
+  .brand__title {
+    margin: 0;
+    color: var(--quiz-red);
+    font-size: clamp(26px, 4vw, 42px);
+    font-weight: 900;
+  }
+
+  .content {
+    max-width: 900px;
+    margin: 24px auto;
+    padding: 0 20px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow:
+      0 2px 2px rgba(0,0,0,0.03),
+      0 5px 14px rgba(0,0,0,0.05);
+  }
+
+  .round {
+    padding: 12px 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    border-bottom: 1px dashed var(--line);
+  }
+
+  .round:last-child {
+    border-bottom: none;
+  }
+
+  .bar-wrap {
+    width: 100%;
+    height: 8px;
+    background: #efefef;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .bar {
+    height: 100%;
+    width: 0%;
+    background: var(--spes-green);
+    transition: width 0.4s ease;
+  }
+
+  .total {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  .back {
+    margin-top: 16px;
+    font-size: 15px;
+  }
+
+  .back a {
+    color: var(--spes-green);
+  }
 </style>
 </head>
+
 <body>
 
-<h1 id="teamName" style="text-align:center"></h1>
+<header class="site-header">
+  <div class="brand">
+    <img src="assets/ouderraad-logo.png"ass="brand__title">Teamresultaat</h1>
+  </div>
+</header>
 
-<table id="details"></table>
+<div class="content">
+  <h2 id="teamname"></h2>
+
+  <div class="card">
+    <div id="roundlist"></div>
+    <div class="total">
+      <span>Totaal</span>
+      <span id="totalscore">0</span>
+    </div>
+  </div>
+
+  <p class="back"><adex.html← Terug naar scorebord</a></p>
+</div>
 
 <script>
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvii1ZbzYpDcsoG8qONnw5w5MogMDWmwTNzCd7KhQ9kFw94jTGlWIWy6Vt-JsHsJokY/pub?gid=0&single=true&output=csv";
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvii1ZbzYpDcsoG8qONnw5w5MogMDWmwTNzCd7KhQ9kFw94jTGlWIWy6Vt-JsHsJokY/pub?gid=0&single=true&output=csv";  // same CSV as index
+const params = new URLSearchParams(location.search);
+const TEAM = params.get("team") || "";
 
-const token = new URLSearchParams(window.location.search).get("token");
+function roundNumberFromName(name) {
+  const m = name.toLowerCase().match(/r(?:onde)?\s*(\d+)/);
+  return m ? parseInt(m[1],10) : null;
+}
 
-fetch(CSV_URL)
-  .then(r => r.text())
-  .then(text => {
-    const rows = text.trim().split("\n").map(r => r.split(","));
-    const header = rows.shift();
+async function fetchCSV() {
+  const r = await fetch(CSV_URL + "&_t=" + Date.now());
+  return await r.text();
+}
 
-    const teamRow = rows.find(r => r[1] === token);
-    if (!teamRow) {
-      document.body.innerHTML = "<h2>Team niet gevonden</h2>";
-      return;
+function parseCSV(text) {
+  const rows = text.trim()
+    .replace(/^\uFEFF/, "")
+    .split(/\r?\n/)
+    .map(r => r.split(",").map(x => x.replace(/^"|"$/g, "").trim()));
+
+  const headers = rows[0];
+  const hLow = headers.map(h => h.toLowerCase());
+
+  const teamIdx = hLow.indexOf("team");
+  const roundCols = headers
+    .map((h,i) => ({label:h, i, nr: roundNumberFromName(h)}))
+    .filter(o => o.nr !== null)
+    .sort((a,b) => a.nr - b.nr);
+
+  const items = rows.slice(1).map(r => {
+    const team = r[teamIdx];
+    let total = 0;
+    const rounds = [];
+
+    for (const col of roundCols) {
+      const v = Number(r[col.i] || 0);
+      rounds.push({label:col.label, value:v});
+      total += v;
     }
 
-    const team = {};
-    header.forEach((h,i) => team[h] = teamRow[i]);
-
-    document.getElementById("teamName").textContent = team.Team;
-
-    const table = document.getElementById("details");
-    header.filter(h => h.startsWith("R")).forEach(r => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${r}</td><td>${team[r]}</td>`;
-      table.appendChild(tr);
-    });
+    return {team, rounds, total};
   });
+
+  return items;
+}
+
+function render(item) {
+  document.getElementById("teamname").textContent = item.team;
+  document.getElementById("totalscore").textContent = item.total;
+
+  const max = Math.max(1, ...item.rounds.map(r => r.value));
+  const list = document.getElementById("roundlist");
+  list.innerHTML = "";
+
+  item.rounds.forEach(r => {
+    const row = document.createElement("div");
+    row.className = "round";
+
+    row.innerHTML = `
+      <div>${r.label}</div>
+      <div>${r.value}</div>
+      <div class="bar-wrap" style="grid-column: 1 / -1;">
+        <div class="bar" style="width:${Math.round((r.value/max)*100)}%;"></div>
+      </div>
+    `;
+
+    list.appendChild(row);
+  });
+}
+
+(async function(){
+  const csv = await fetchCSV();
+  const rows = parseCSV(csv);
+  const item = rows.find(r => r.team.toLowerCase() === TEAM.toLowerCase());
+
+  if (!item) {
+    document.getElementById("teamname").textContent = "Team niet gevonden";
+    return;
+  }
+
+  render(item);
+})();
 </script>
 
 </body>
