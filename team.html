@@ -40,20 +40,18 @@
     }
 
     .pill{ display:inline-block; padding:4px 10px; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:13px; margin-bottom:12px; }
-
     
     /* Per‑round mini bars */
     .round-bar-wrap {
       width:100%;
-      height:10px;
+      height:12px;                       /* a bit larger for readability */
       background:#efefef;
       border:2px solid var(--spes-green);
       border-radius:999px;
       overflow:hidden;
       box-sizing:border-box;
-      margin:4px 0;
+      margin:2px 0;                      /* tighter vertical spacing */
     }
-
     .round-bar {
       height:100%;
       width:0%;
@@ -61,31 +59,44 @@
       transition:width .45s ease;
     }
 
-    /* Ronde-lijst – badge + score/max + % */
-    .rows{ display:grid; gap:10px; }
+    /* Round rows: [label] [bar] [score/max] [%] */
+    .rows { display:grid; gap:10px; }
     .row{
-      display:grid; grid-template-columns: minmax(320px, 1fr) 140px 100px;
-      gap:12px; align-items:center; padding:6px 0; border-bottom:1px dashed var(--line);
+      display:grid;
+      grid-template-columns: minmax(280px, 1.4fr) 2.2fr 130px 100px;
+      gap:12px;
+      align-items:center;
+      padding:6px 0;
+      border-bottom:1px dashed var(--line);
     }
-    .row:last-child{ border-bottom:none; }
+    .row:last-child { border-bottom:none; }
 
-    .label{ display:flex; align-items:center; gap:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700; }
+    /* Badge + name */
+    .label{
+      display:flex; align-items:center; gap:10px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      font-weight:700;
+    }
     .rnum{
       min-width:38px; height:38px; border-radius:10px; box-sizing:border-box;
       display:grid; place-items:center; font-weight:800; color:var(--rank-default-fg);
       background:var(--rank-default-bg); border:2px solid #bfe0bf; font-size:16px; flex:0 0 auto;
     }
+
     .value{ text-align:right; font-weight:800; }
     .perc { text-align:right; color:#1B5E20; font-weight:800; }
 
-    /* Totaalrij (geen label "Totaal", wel uitgelijnd + groter) */
+    /* Total row: 4 columns too, with a bar */
     .total-row{
-      display:grid; grid-template-columns: minmax(320px, 1fr) 140px 100px;
-      gap:12px; align-items:center; padding-top:10px;
-      font-weight:900; font-size:20px;
+      display:grid;
+      grid-template-columns: minmax(280px, 1.4fr) 2.2fr 130px 100px;
+      gap:12px;
+      align-items:center;
+      padding-top:10px;
+      font-weight:900; font-size:20px;         /* a bit larger for emphasis */
     }
-    .total-row .perc { color:#1B5E20; } /* ook groen */
-    .total-row .label { visibility:hidden; } /* lege 1e kolom, houdt uitlijning */
+    .total-row .perc { color:#1B5E20; }
+    .total-row .label { visibility:hidden; }    /* keep column alignment */
     .total-row .label::after{ content:""; }
 
     .back{ margin-top:18px; }
@@ -98,7 +109,7 @@
       box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
     }
     .chart h3{ margin:0 0 8px; font-size:18px; }
-    .chart svg{ width:100%; height:700px; display:block; }
+    .chart svg{ width:100%; height:820px; display:block; }
     .axis text{ fill:#666; font-size:12px; }
     .gridline{ stroke:#e9eaec; stroke-width:1; }
     .rank-path{ fill:none; stroke:var(--spes-green); stroke-width:3; }
@@ -125,7 +136,8 @@
     <div class="rows" id="roundList"></div>
 
     <div class="total-row">
-      <div class="label"><span class="rnum" style="opacity:0">0</span><span></span></div> <!-- lege badge/label om uit te lijnen -->
+      <div class="label"><span class="rnum" style="opacity:0">0</span><span></span></div>
+      <div class="round-bar-wrap"><div id="totalBar" class="round-bar"></div></div>
       <div id="totalScore" class="value">0 / 0</div>
       <div id="totalPerc"  class="perc">0%</div>
     </div>
@@ -133,7 +145,7 @@
 
   <div class="chart">
     <h3>Evolutie van de positie per ronde</h3>
-    <svg id="rankChart" viewBox="0 0 1100 700" preserveAspectRatio="none" aria-label="Positie per ronde"></svg>
+    <svg id="rankChart" viewBox="0 0 1100 820" preserveAspectRatio="none" aria-label="Positie per ronde"></svg>
   </div>
 
   <p class="back">
@@ -237,35 +249,37 @@ function renderTeam(ds, keyRaw){
     const pct  = maxR>0 ? Math.round((v/maxR)*100) : 0;
 
     const row  = document.createElement("div"); row.className="row";
+
+    // 1) label with badge
     const lab  = document.createElement("div"); lab.className="label";
     const badge= document.createElement("div"); badge.className="rnum"; badge.textContent = (i+1);
     const txt  = document.createElement("div"); txt.textContent = labels[i] || `R${i+1}`;
     lab.appendChild(badge); lab.appendChild(txt);
 
-    const val  = document.createElement("div"); val.className="value"; val.textContent = `${v} / ${maxR}`;
-    const per  = document.createElement("div"); per.className="perc";  per.textContent = `${pct}%`;
-
-    
-    // BAR
-    const barWrap = document.createElement("div");
-    barWrap.className = "round-bar-wrap";
-    const bar = document.createElement("div");
-    bar.className = "round-bar";
+    // 2) bar
+    const barWrap = document.createElement("div"); barWrap.className = "round-bar-wrap";
+    const bar     = document.createElement("div"); bar.className = "round-bar";
     bar.style.width = maxR > 0 ? Math.round((v/maxR)*100) + "%" : "0%";
     barWrap.appendChild(bar);
+
+    // 3) score/max and 4) percentage
+    const val  = document.createElement("div"); val.className="value"; val.textContent = `${v} / ${maxR}`;
+    const per  = document.createElement("div"); per.className="perc";  per.textContent = `${pct}%`;
 
     row.appendChild(lab);
     row.appendChild(barWrap);
     row.appendChild(val);
     row.appendChild(per);
-
     rowsEl.appendChild(row);
-
   });
 
   totalEl.textContent = `${item.total} / ${ds.maxTotal}`;
   const finalPct = ds.maxTotal>0 ? Math.round((item.total/ds.maxTotal)*100) : 0;
   percEl.textContent  = `${finalPct}%`;
+
+  // total bar
+  const totalBar = document.getElementById("totalBar");
+  if (totalBar) totalBar.style.width = ds.maxTotal > 0 ? Math.round((item.total/ds.maxTotal)*100) + "%" : "0%";
 
   const posMap = positionsPerRound(ds);
   drawRankChart("rankChart", posMap.get(item.team), ds.data.length, labels);
@@ -278,7 +292,7 @@ function drawRankChart(svgId, posArr, nTeams, labels){
   if(!posArr || !posArr.length){ svg.innerHTML = "<text x='12' y='24' class='axis'>Geen data</text>"; return; }
 
   // lagere ondermarge -> labels dichter bij as
-  const W=1100, H=700, L=75, R=20, T=16, B=60;
+  const W=1200, H=820, L=75, R=20, T=16, B=70;
   const plotW=W-L-R, plotH=H-T-B;
 
   const x = (i)=> L + (posArr.length<=1? plotW/2 : (i*(plotW/(posArr.length-1))));

@@ -70,7 +70,7 @@
       box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
     }
 
-    /* Rang-badge – same size for all, with color‑matched borders for podium */
+    /* Rank badge – same size for all */
     .place {
       width:56px;
       height:56px;
@@ -80,26 +80,27 @@
       font-weight:800;
       font-size:22px;
       box-sizing:border-box;
+
+      /* DEFAULT (ranks ≥4): green box + green border */
+      background: var(--rank-default-bg);     /* <- brings back the green fill */
+      border: 2px solid #bfe0bf;              /* <- and its green border */
+      color:#1B5E20;                           /* readable dark green text */
     }
 
-    /* Golden podium */
+    /* Podium: same size, but borders match the fills */
     .place.gold {
       background:linear-gradient(135deg, var(--spes-yellow), #ffb300);
-      border:2px solid #d49800;      /* dark edge of gold */
+      border:2px solid #d49800;
       color:#333;
     }
-
-    /* Silver podium */
     .place.silver {
       background:linear-gradient(135deg, #e0e0e0, #bdbdbd);
-      border:2px solid #9e9e9e;      /* dark silver border */
+      border:2px solid #9e9e9e;
       color:#333;
     }
-
-    /* Bronze podium */
     .place.bronze {
       background:linear-gradient(135deg, #ffcc80, #fb8c00);
-      border:2px solid #c66a00;      /* dark bronze border */
+      border:2px solid #c66a00;
       color:#333;
     }
 
