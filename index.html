@@ -335,20 +335,14 @@ function render(){
 
     card.appendChild(badge);
     card.appendChild(list);
-    
-    // On mobile, score goes inside bar-wrap; on desktop it's separate
-    if (window.innerWidth <= 768) {
-      barWrap.appendChild(score);
-      card.appendChild(barWrap);
-    } else {
-      card.appendChild(barWrap);
-      card.appendChild(score);
-    }
-    root.appendChild(card);
+    card.appendChild(barWrap);
+    card.appendChild(score);
   }
 
   const shownRanks = visible.length;
-  meta.textContent = (shownRanks ? `Getoonde rangen: ${shownRanks}/${groups.length} – ` : "Nog geen teams getoond – ")
+  const shownTeams = visible.reduce((sum, g) => sum + g.teams.length, 0);
+  const totalTeams = groups.reduce((sum, g) => sum + g.teams.length, 0);
+  meta.textContent = (shownRanks ? `Getoonde rangen: ${shownRanks}/${groups.length} · Getoonde teams: ${shownTeams}/${totalTeams} – ` : "Nog geen teams getoond – ")
                    + "Laatst bijgewerkt: " + new Date().toLocaleTimeString();
   updateButtons();
 }
