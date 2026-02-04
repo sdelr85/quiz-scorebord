@@ -337,12 +337,14 @@ function render(){
     card.appendChild(list);
     card.appendChild(barWrap);
     card.appendChild(score);
+    
+    root.appendChild(card);
   }
 
   const shownRanks = visible.length;
   const shownTeams = visible.reduce((sum, g) => sum + g.teams.length, 0);
   const totalTeams = groups.reduce((sum, g) => sum + g.teams.length, 0);
-  meta.textContent = (shownRanks ? `Getoonde rangen: ${shownRanks}/${groups.length} · Getoonde teams: ${shownTeams}/${totalTeams} – ` : "Nog geen teams getoond – ")
+  meta.textContent = (shownRanks ? `Getoonde rangen: ${shownRanks}/${groups.length} - Getoonde teams: ${shownTeams}/${totalTeams} – ` : "Nog geen teams getoond – ")
                    + "Laatst bijgewerkt: " + new Date().toLocaleTimeString();
   updateButtons();
 }
