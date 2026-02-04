@@ -29,14 +29,14 @@
 
     /* Header */
     .site-header{ background:#fff; border-bottom:4px solid var(--spes-green); padding:20px; }
-    .brand{ max-width:1050px; margin:0 auto; display:flex; align-items:center; gap:20px; }
+    .brand{ max-width:1200px; margin:0 auto; display:flex; align-items:center; gap:20px; }
     .brand__logo{ height:clamp(72px, 9vw, 110px); width:auto; object-fit:contain; }
     .brand__titles{ display:flex; flex-direction:column; gap:4px; }
     .brand__title{ margin:0; font-size:clamp(34px,4.4vw,50px); color:var(--quiz-red); font-weight:900; line-height:1.1; }
     .brand__subtitle{ margin:0; color:var(--muted); }
 
     /* Actions */
-    .actions{ max-width:1050px; margin:16px auto; padding:0 20px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    .actions{ max-width:1200px; margin:16px auto; padding:0 20px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
     .btn{ padding:10px 16px; border-radius:10px; border:2px solid transparent; font-size:15px; font-weight:600; cursor:pointer; transition:.18s; }
     .btn-primary{ background:var(--spes-green); color:#fff; }
     .btn-secondary{ background:#fff; border:2px solid var(--light-green); color:var(--spes-green); }
@@ -45,27 +45,27 @@
     #meta{ text-align:center; color:var(--muted); font-size:13px; margin-top:-4px; margin-bottom:12px; }
 
     /* Lijst */
-    .wrap{ max-width:1050px; margin:0 auto; padding:0 20px 40px; }
+    .wrap{ max-width:1200px; margin:0 auto; padding:0 20px 60px; }
     .grid{ display:grid; gap:14px; }
 
-    /* Kaart in kolommen: [ rank | team | balk | score ]  */
-    .card{
+    /* Eén kaart = één rank‑groep (kan meerdere teams bevatten) */
+    .group-card{
       display:grid;
-      grid-template-columns: 72px minmax(260px, 3.2fr) 2.2fr 72px; /* teamnaam ruimer, balk korter */
+      grid-template-columns: 80px minmax(260px, 3.2fr) 2.2fr 90px; /* rank | namen | bar | score */
       align-items:center;
-      gap:14px;
+      gap:16px;
       background:var(--card);
       border:1px solid var(--line);
       border-radius:14px;
-      padding:14px 16px;
+      padding:16px 18px;
       box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
     }
 
-    /* Rang-badge */
+    /* Rang-badge (vertical centered) */
     .place{
-      width:52px; height:52px; border-radius:12px;
+      width:56px; height:56px; border-radius:12px;
       display:grid; place-items:center;
-      font-weight:800; font-size:20px;
+      font-weight:800; font-size:22px;
       color:var(--rank-default-fg);
       background:var(--rank-default-bg);
       border:2px solid #bfe0bf;
@@ -75,33 +75,30 @@
     .place.silver{ background:linear-gradient(135deg, #e0e0e0, #bdbdbd); color:#333; border:none; }
     .place.bronze{ background:linear-gradient(135deg, #ffcc80, #fb8c00); color:#333; border:none; }
 
-    /* Teamnaam – enkel-lijn + ellipsis */
-    .team{
-      font-weight:800;
-      font-size:clamp(15px, 1.8vw, 20px);
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    /* Teamlijst (meerdere namen onder elkaar) */
+    .teamlist{ display:flex; flex-direction:column; gap:6px; }
+    .team a{
+      color:var(--text); text-decoration:none; font-weight:800;
+      font-size:clamp(15px, 1.8vw, 20px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
-    .team a{ color:var(--text); text-decoration:none; }
     .team a:hover{ text-decoration:underline; }
 
-    /* Balk: track = max totale score, fill = team / maxTotal, met groene outline */
+    /* Bar: één per groep, geschaald tov totale max; groene outline */
     .bar-wrap{
       width:100%;
-      height:12px;
+      height:14px;
       background:#efefef;
-      border:2px solid var(--spes-green);   /* fijne groene omranding */
+      border:2px solid var(--spes-green);
       border-radius:999px;
       overflow:hidden;
       box-sizing:border-box;
     }
-    .bar{
-      height:100%;
-      width:0%;
-      background:var(--spes-green);
-      transition:width .45s ease;
-    }
+    .bar{ height:100%; width:0%; background:var(--spes-green); transition:width .45s ease; }
 
-    .score{ text-align:right; font-size:22px; font-weight:800; color:var(--text); }
+    .score{
+      text-align:right; font-size:24px; font-weight:900; color:var(--text);
+      align-self:center;
+    }
   </style>
 </head>
 <body>
@@ -120,6 +117,7 @@
   <button id="btnAdd"     class="btn btn-primary">+ Voeg team toe</button>
   <button id="btnUndo"    class="btn btn-secondary">– Verwijder laatste</button>
   <button id="btnAll"     class="btn btn-secondary">Toon alle teams</button>
+  <button id="btnTop5"    class="btn btn-secondary">Top 5</button>
   <button id="btnReset"   class="btn btn-secondary">Reset</button>
   <button id="btnRefresh" class="btn btn-secondary">Vernieuwen</button>
 </div>
@@ -133,10 +131,11 @@
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvii1ZbzYpDcsoG8qONnw5w5MogMDWmwTNzCd7KhQ9kFw94jTGlWIWy6Vt-JsHsJokY/pub?gid=0&single=true&output=csv";
 
 /* === STATE === */
-let fullData = [];
-let visibleCount = 0;
-let manualCleared = true;   // start leeg
-let maxTotal = 0;
+let groups = [];          // [{rank, total, teams:[{team,token}]}]
+let visibleGroupCount = 0; // for incremental reveal (from bottom)
+let manualCleared = true; // start empty
+let maxTotal = 0;         // sum of round maxima
+let mode = "incremental"; // 'incremental' | 'all' | 'top5'
 
 /* Helpers */
 async function fetchCSV(u){
@@ -145,153 +144,196 @@ async function fetchCSV(u){
   return await r.text();
 }
 
-/* Rondekolommen = headers vanaf kolom C; laatste kolom "TOTAL/TOTAAL" negeren.
-   Laatste CSV-rij = MAXIMA per ronde (exclusief uit teams). */
-function getRoundColumnIndices(headers){
+/* Rondekolommen = headers vanaf C; laatste header TOTAL/TOTAAL negeren; laatste rij = MAX */
+function roundIndices(headers){
   const start = 2; // C
   let end = headers.length - 1;
-  const lastLabel = headers[headers.length-1]?.trim().toLowerCase();
-  if (lastLabel === "total" || lastLabel === "totaal") end = headers.length - 2;
-  const idxs = [];
-  for(let i=start;i<=end;i++) idxs.push(i);
-  return idxs;
+  const last = headers.at(-1)?.trim().toLowerCase();
+  if(last === "total" || last === "totaal") end = headers.length - 2;
+  const idx=[]; for(let i=start;i<=end;i++) idx.push(i);
+  return idx;
 }
 
 function parseCSV(text){
   const rows = text.trim().replace(/^\uFEFF/,"").split(/\r?\n/)
     .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => x.replace(/^"|"$/g,"").trim()));
-  if(!rows.length) return {teams:[], roundIdxs:[], maxByRound:[], maxTotal:0};
+  if(!rows.length) return {rows:[], headers:[], roundIdxs:[], maxByRound:[], maxTotal:0};
 
-  const headers = rows[0].map(h=>h.trim());
+  const headers = rows[0];
   const hLow = headers.map(h=>h.toLowerCase());
-  const teamIdx  = hLow.indexOf("team");
-  const tokenIdx = hLow.indexOf("token");
-  const roundIdxs = getRoundColumnIndices(headers);
+  const teamIdx = hLow.indexOf("team");
+  const tokenIdx= hLow.indexOf("token");
+  const rIdx = roundIndices(headers);
 
-  // maxima = laatste rij
-  const last = rows[rows.length-1] || [];
-  const maxByRound = roundIdxs.map(i => Number((last[i]||"0").replace(",","."))||0);
+  // maxima: last row
+  const maxRow = rows.at(-1) || [];
+  const maxByRound = rIdx.map(i => Number((maxRow[i]||"0").replace(",","."))||0);
   const maxTotal = maxByRound.reduce((a,b)=>a+b,0);
 
-  // teams = rijen 1..(n-2) (exclusief header en exclusief laatste maxima-rij)
-  const teamRows = rows.slice(1, Math.max(1, rows.length-1));
-  const teams = teamRows.map(r=>{
-    const team  = teamIdx>=0 ? (r[teamIdx]||"") : "";
-    const token = tokenIdx>=0 ? (r[tokenIdx]||"") : "";
-    let total=0;
-    for(const i of roundIdxs){
-      total += Number((r[i]||"0").replace(",",".")) || 0;
-    }
+  // team rows (exclude header and last)
+  const trows = rows.slice(1, -1);
+  const teams = trows.map(r=>{
+    const team = (r[teamIdx]||"");
+    const token= (r[tokenIdx]||"");
+    const total = rIdx.reduce((acc,i)=> acc + (Number((r[i]||"0").replace(",","."))||0), 0);
     return {team, token, total};
   }).filter(x=>x.team);
 
-  return {teams, roundIdxs, maxByRound, maxTotal};
+  return {teams, maxTotal};
 }
 
-function computeRanks(list){
-  list.sort((a,b)=> b.total - a.total || a.team.localeCompare(b.team,'nl'));
+function denseRank(items){
+  items.sort((a,b)=> b.total - a.total || a.team.localeCompare(b.team,'nl'));
   let prev=null, rank=0;
-  list.forEach((x,i)=>{ if(prev===null||x.total<prev) rank=i+1; x.rank=rank; prev=x.total; });
-  return list;
+  items.forEach((x,i)=>{ if(prev===null || x.total<prev) rank=i+1; x.rank=rank; prev=x.total; });
+  return items;
 }
 
-function render(list){
+function groupByRank(items){
+  const map = new Map();
+  for(const t of items){
+    if(!map.has(t.rank)) map.set(t.rank, {rank:t.rank, total:t.total, teams:[]});
+    map.get(t.rank).teams.push({team:t.team, token:t.token});
+  }
+  // sort team names inside group
+  for(const g of map.values()) g.teams.sort((a,b)=> a.team.localeCompare(b.team,'nl'));
+  // return in ascending rank (1..n)
+  return Array.from(map.values()).sort((a,b)=> a.rank-b.rank);
+}
+
+function render(){
   const root = document.getElementById("list");
   const meta = document.getElementById("meta");
   root.innerHTML = "";
 
-  if (manualCleared) {
+  if (manualCleared || !groups.length){
     meta.textContent = "Nog geen teams getoond";
     updateButtons();
     return;
   }
 
-  const toShow = list.slice(-visibleCount);
-  const denom = Math.max(1, maxTotal); // totale mogelijke score
-  toShow.forEach(row=>{
-    const pct = Math.max(0, Math.min(100, Math.round((row.total/denom)*100)));
+  let visible = [];
+  if(mode === "all"){
+    visible = groups;
+  }else if(mode === "top5"){
+    visible = groups.filter(g => g.rank <= 5);
+  }else{
+    // incremental: take bottom N groups, then show in ascending rank
+    const take = Math.max(0, Math.min(visibleGroupCount, groups.length));
+    visible = groups.slice(-take);
+  }
 
+  const denom = Math.max(1, maxTotal);
+  for(const g of visible){
     const card = document.createElement("div");
-    card.className = "card";
+    card.className = "group-card";
 
-    const place = document.createElement("div");
-    place.className = "place";
-    if(row.rank===1) place.classList.add("gold");
-    else if(row.rank===2) place.classList.add("silver");
-    else if(row.rank===3) place.classList.add("bronze");
-    place.textContent = row.rank;
+    // rank badge
+    const badge = document.createElement("div");
+    badge.className = "place";
+    if(g.rank===1) badge.classList.add("gold");
+    else if(g.rank===2) badge.classList.add("silver");
+    else if(g.rank===3) badge.classList.add("bronze");
+    badge.textContent = g.rank;
 
-    const team = document.createElement("div");
-    team.className = "team";
-    const a = document.createElement("a");
-    const q = row.token ? ("t="+encodeURIComponent(row.token)) : ("team="+encodeURIComponent(row.team));
-    a.href = "team.html?"+q;
-    a.textContent = row.team;
-    team.appendChild(a);
+    // team list
+    const list = document.createElement("div");
+    list.className = "teamlist";
+    g.teams.forEach(t=>{
+      const div=document.createElement("div");
+      div.className="team";
+      const a=document.createElement("a");
+      const q = t.token ? ("t="+encodeURIComponent(t.token)) : ("team="+encodeURIComponent(t.team));
+      a.href = "team.html?"+q;
+      a.textContent = t.team;
+      div.appendChild(a);
+      list.appendChild(div);
+    });
 
+    // single bar for the group (all teams share same total by definition)
     const barWrap = document.createElement("div");
     barWrap.className = "bar-wrap";
     const bar = document.createElement("div");
     bar.className = "bar";
-    bar.style.width = pct + "%";
+    bar.style.width = Math.round((g.total/denom)*100) + "%";
     barWrap.appendChild(bar);
 
+    // single score for the group
     const score = document.createElement("div");
     score.className = "score";
-    score.textContent = row.total;
+    score.textContent = g.total;
 
-    card.appendChild(place);
-    card.appendChild(team);
+    card.appendChild(badge);
+    card.appendChild(list);
     card.appendChild(barWrap);
     card.appendChild(score);
     root.appendChild(card);
-  });
+  }
 
-  meta.textContent = (toShow.length ? `Getoond: ${toShow.length}/${list.length} – ` : "Nog geen teams getoond – ")
+  const shownRanks = visible.length;
+  meta.textContent = (shownRanks ? `Getoonde rangen: ${shownRanks}/${groups.length} – ` : "Nog geen teams getoond – ")
                    + "Laatst bijgewerkt: " + new Date().toLocaleTimeString();
-
   updateButtons();
 }
 
 function updateButtons(){
-  const add = document.getElementById("btnAdd");
-  const undo= document.getElementById("btnUndo");
-  const all = document.getElementById("btnAll");
-  const rst = document.getElementById("btnReset");
-  const ref = document.getElementById("btnRefresh");
+  const add  = document.getElementById("btnAdd");
+  const undo = document.getElementById("btnUndo");
+  const all  = document.getElementById("btnAll");
+  const top5 = document.getElementById("btnTop5");
+  const rst  = document.getElementById("btnReset");
+  const ref  = document.getElementById("btnRefresh");
+
   if (manualCleared){
-    add.disabled=false; all.disabled=false; undo.disabled=true; rst.disabled=false; ref.disabled=false;
+    add.disabled=false; undo.disabled=true; all.disabled=false; top5.disabled=false; rst.disabled=false; ref.disabled=false;
+  } else if (mode === "all" || mode === "top5") {
+    add.disabled=false; undo.disabled=false; all.disabled=true; top5.disabled=true; rst.disabled=false; ref.disabled=false;
   } else {
-    add.disabled   = visibleCount >= fullData.length;
-    undo.disabled  = visibleCount <= 0;
-    all.disabled   = visibleCount >= fullData.length;
-    rst.disabled   = false;
-    ref.disabled   = false;
+    add.disabled = (visibleGroupCount >= groups.length);
+    undo.disabled= (visibleGroupCount <= 0);
+    all.disabled = false; top5.disabled=false; rst.disabled=false; ref.disabled=false;
   }
 }
 
 /* ---- Handlers ---- */
-async function refresh(preserveState=true){
+async function refresh(preserve=true){
   const csv = await fetchCSV(CSV_URL);
   const parsed = parseCSV(csv);
-  fullData = computeRanks(parsed.teams);
-  maxTotal = parsed.maxTotal || Math.max(...fullData.map(x=>x.total), 1); // fallback
-  if (preserveState) {
-    if (visibleCount > fullData.length) visibleCount = fullData.length;
-    render(fullData);
-  } else {
-    manualCleared = true; visibleCount = 0; render(fullData);
+  maxTotal = parsed.maxTotal || 1;
+
+  const ranked = denseRank(parsed.teams);
+  groups = groupByRank(ranked);
+
+  if(preserve){
+    if(mode==="incremental"){
+      // clamp visibleGroupCount
+      visibleGroupCount = Math.max(0, Math.min(visibleGroupCount, groups.length));
+    }
+  }else{
+    manualCleared = true; mode="incremental"; visibleGroupCount=0;
   }
+  render();
 }
 
-document.getElementById("btnAdd").onclick  = ()=>{ manualCleared=false; visibleCount = Math.min(visibleCount+1, fullData.length); render(fullData); };
-document.getElementById("btnUndo").onclick = ()=>{ if (manualCleared) return; visibleCount = Math.max(visibleCount-1, 0); render(fullData); };
-document.getElementById("btnAll").onclick  = ()=>{ manualCleared=false; visibleCount = fullData.length; render(fullData); };
-document.getElementById("btnReset").onclick= ()=>{ manualCleared=true; visibleCount=0; render(fullData); };
+document.getElementById("btnAdd").onclick  = ()=>{
+  manualCleared=false; mode="incremental";
+  visibleGroupCount = Math.min(visibleGroupCount+1, groups.length);
+  render();
+};
+document.getElementById("btnUndo").onclick = ()=>{
+  if (manualCleared) return;
+  if (mode !== "incremental"){ mode="incremental"; }
+  visibleGroupCount = Math.max(visibleGroupCount-1, 0);
+  if(visibleGroupCount===0) manualCleared=true;
+  render();
+};
+document.getElementById("btnAll").onclick  = ()=>{ manualCleared=false; mode="all";  visibleGroupCount=groups.length; render(); };
+document.getElementById("btnTop5").onclick = ()=>{ manualCleared=false; mode="top5"; visibleGroupCount=groups.length; render(); };
+document.getElementById("btnReset").onclick= ()=>{ manualCleared=true; mode="incremental"; visibleGroupCount=0; render(); };
 document.getElementById("btnRefresh").onclick = ()=>{ refresh(true); };
 
-/* Start: éénmalig data laden, maar NIETS tonen zolang manualCleared=true */
-refresh(true).catch(console.error);  // haalt CSV op; render() toont “Nog geen teams getoond”
+/* Start: laad data, maar toon niets tot gebruiker kiest */
+refresh(true).catch(console.error);
 </script>
 </body>
 </html>

@@ -26,13 +26,13 @@
 
     /* Header */
     .site-header{ background:#fff; border-bottom:4px solid var(--spes-green); padding:20px; margin-bottom:18px; }
-    .brand{ max-width:1050px; margin:0 auto; display:flex; align-items:center; gap:20px; }
+    .brand{ max-width:1200px; margin:0 auto; display:flex; align-items:center; gap:20px; }
     .brand__logo{ height:clamp(72px, 9vw, 110px); width:auto; object-fit:contain; }
     .brand__titles{ display:flex; flex-direction:column; gap:4px; }
     .brand__title{ margin:0; font-size:clamp(34px,4.4vw,50px); color:var(--quiz-red); font-weight:900; line-height:1.1; }
     .brand__subtitle{ margin:0; color:var(--muted); }
 
-    .wrap{ max-width:1050px; margin:0 auto; padding:0 20px 36px; }
+    .wrap{ max-width:1200px; margin:0 auto; padding:0 20px 40px; }
 
     .card{
       background:var(--card);
@@ -45,44 +45,40 @@
 
     .pill{ display:inline-block; padding:4px 10px; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:13px; margin-bottom:12px; }
 
-    /* Ronde-lijst (zonder balken) — met rondebadge */
+    /* Ronde-lijst (zonder balken) — met rondebadge + score/max + % */
     .rows{ display:grid; gap:10px; }
     .row{
-      display:grid; grid-template-columns: minmax(260px, 1fr) auto;
+      display:grid; grid-template-columns: minmax(320px, 1fr) 120px 90px;
       gap:12px; align-items:center; padding:6px 0; border-bottom:1px dashed var(--line);
     }
     .row:last-child{ border-bottom:none; }
 
-    .label{
-      display:flex; align-items:center; gap:10px;
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      font-weight:700;
-    }
+    .label{ display:flex; align-items:center; gap:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700; }
     .rnum{
-      min-width:36px; height:36px; border-radius:10px;
-      display:grid; place-items:center;
-      font-weight:800; color:var(--rank-default-fg);
-      background:var(--rank-default-bg);
-      border:2px solid #bfe0bf;
-      font-size:16px;
-      flex:0 0 auto;
+      min-width:38px; height:38px; border-radius:10px;
+      display:grid; place-items:center; font-weight:800; color:var(--rank-default-fg);
+      background:var(--rank-default-bg); border:2px solid #bfe0bf; font-size:16px; flex:0 0 auto;
     }
     .value{ text-align:right; font-weight:800; }
+    .perc { text-align:right; color:#1b5e20; font-weight:800; }
+
+    .total-row{
+      display:grid; grid-template-columns: minmax(320px, 1fr) 120px 90px;
+      gap:12px; align-items:center; padding-top:10px;
+      font-weight:900; font-size:20px;
+    }
 
     .back{ margin-top:18px; }
     .back a{ color:var(--spes-green); text-decoration:none; font-weight:700; }
     .back a:hover{ text-decoration:underline; }
 
-    /* Grafiek – hoger + betere marges + schuine labels */
+    /* Grafiek – hoger + brede marges + schuine labels */
     .chart{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:16px;
+      background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px;
       box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
     }
     .chart h3{ margin:0 0 8px; font-size:18px; }
-    .chart svg{ width:100%; height:520px; display:block; } /* hoger */
+    .chart svg{ width:100%; height:700px; display:block; } /* nog groter */
     .axis text{ fill:#666; font-size:12px; }
     .gridline{ stroke:#e9eaec; stroke-width:1; }
     .rank-path{ fill:none; stroke:var(--spes-green); stroke-width:3; }
@@ -105,15 +101,19 @@
 
   <div class="card">
     <div id="rankInfo" class="pill">Positie: -</div>
+
     <div class="rows" id="roundList"></div>
-    <div style="display:flex; justify-content:space-between; margin-top:12px; font-weight:800;">
-      <span>Totaal</span><span id="totalScore">0</span>
+
+    <div class="total-row">
+      <div>Totaal</div>
+      <div id="totalScore">0 / 0</div>
+      <div id="totalPerc">0%</div>
     </div>
   </div>
 
   <div class="chart">
     <h3>Evolutie van de positie per ronde</h3>
-    <svg id="rankChart" viewBox="0 0 980 520" preserveAspectRatio="none" aria-label="Positie per ronde"></svg>
+    <svg id="rankChart" viewBox="0 0 1100 700" preserveAspectRatio="none" aria-label="Positie per ronde"></svg>
   </div>
 
   <p class="back">
@@ -129,35 +129,35 @@ const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvi
 const norm = s => String(s||"").normalize('NFKC').trim().toLowerCase().replace(/\s+/g,' ');
 async function fetchCSV(u){ const r = await fetch(u + "&_t=" + Date.now(), {cache:"no-store"}); if(!r.ok) throw new Error("CSV ophalen mislukt"); return await r.text(); }
 
-/* Rondekolommen: vanaf C, laatste "TOTAL/TOTAAL" negeren; laatste rij = maxima */
+/* Rondekolommen: vanaf C; laatste header TOTAL/TOTAAL negeren; laatste rij = maxima */
 function getRoundColumns(headers){
   const start = 2; // C
   let end = headers.length - 1;
-  const lastLabel = headers[headers.length-1]?.trim().toLowerCase();
+  const lastLabel = headers.at(-1)?.trim().toLowerCase();
   if (lastLabel === "total" || lastLabel === "totaal") end = headers.length - 2;
-  const cols = [];
-  for(let i=start;i<=end;i++) cols.push({label:headers[i], i});
+  const cols=[]; for(let i=start;i<=end;i++) cols.push({label:headers[i], i});
   return cols;
 }
 
 function parseCSV(text){
   const rows = text.trim().replace(/^\uFEFF/,"").split(/\r?\n/)
     .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => x.replace(/^"|"$/g,"").trim()));
-  if(!rows.length) return {data:[], roundCols:[], maxByRound:[]};
+  if(!rows.length) return {data:[], roundCols:[], maxByRound:[], maxTotal:0};
 
-  const headers = rows[0].map(h=>h.trim());
+  const headers = rows[0];
   const hLow    = headers.map(h=>h.toLowerCase());
   const teamIdx  = hLow.indexOf("team");
   const tokenIdx = hLow.indexOf("token");
 
   const roundCols = getRoundColumns(headers);
 
-  // maxima = laatste rij
-  const last = rows[rows.length-1] || [];
+  // maxima (last row)
+  const last = rows.at(-1) || [];
   const maxByRound = roundCols.map(c => Number((last[c.i]||"0").replace(",","."))||0);
+  const maxTotal = maxByRound.reduce((a,b)=>a+b,0);
 
-  // teams = rijen 1..(n-2): data zonder maxima
-  const teamRows = rows.slice(1, Math.max(1, rows.length-1));
+  // teams = rows 1..n-2
+  const teamRows = rows.slice(1, -1);
   const data = teamRows.map(r=>{
     const team  = (r[teamIdx]  || "");
     const token = (r[tokenIdx] || "");
@@ -166,7 +166,7 @@ function parseCSV(text){
     return {team, token, rounds, total};
   }).filter(x=>x.team);
 
-  return {data, roundCols, maxByRound};
+  return {data, roundCols, maxByRound, maxTotal};
 }
 
 /*** Ranking helpers ***/
@@ -199,40 +199,48 @@ function renderTeam(ds, keyRaw){
   const item = ds.data.find(x => norm(x.token)===k) || ds.data.find(x => norm(x.team)===k);
 
   const title   = document.getElementById("teamTitle");
-  const roundsEl= document.getElementById("roundList");
+  const rowsEl  = document.getElementById("roundList");
   const totalEl = document.getElementById("totalScore");
+  const percEl  = document.getElementById("totalPerc");
   const rankInfo= document.getElementById("rankInfo");
 
-  if(!item){ title.textContent="Team niet gevonden"; roundsEl.innerHTML="<p>Niet gevonden.</p>"; return; }
+  if(!item){ title.textContent="Team niet gevonden"; rowsEl.innerHTML="<p>Niet gevonden.</p>"; return; }
 
   title.textContent = item.team;
 
+  // Eindpositie
   const endRank = denseRanks(ds.data.map(d => ({team:d.team,total:d.total}))).get(item.team) || "-";
   rankInfo.textContent = `Positie: ${endRank} / ${ds.data.length}`;
 
-  /* Tabel met rondebadge + "(i). label" en "score / max" */
-  roundsEl.innerHTML="";
-  const names = ds.roundCols.map((c,i)=> `${i+1}. ${c.label||("R"+(i+1))}`);
+  // Per ronde: badge (i+1), label (no number), value "score / max", percentage
+  rowsEl.innerHTML="";
+  const labels = ds.roundCols.map(c => (c.label||"").trim());
   item.rounds.forEach((v,i)=>{
     const maxR = ds.maxByRound[i] ?? 0;
+    const pct  = maxR>0 ? Math.round((v/maxR)*100) : 0;
 
-    const row=document.createElement("div"); row.className="row";
+    const row  = document.createElement("div"); row.className="row";
 
-    const label=document.createElement("div"); label.className="label";
-    const badge=document.createElement("div"); badge.className="rnum"; badge.textContent = (i+1);
-    const text=document.createElement("div"); text.textContent = names[i];
-    label.appendChild(badge); label.appendChild(text);
+    const lab  = document.createElement("div"); lab.className="label";
+    const badge= document.createElement("div"); badge.className="rnum"; badge.textContent = (i+1);
+    const txt  = document.createElement("div"); txt.textContent = labels[i] || `R${i+1}`;
+    lab.appendChild(badge); lab.appendChild(txt);
 
-    const value=document.createElement("div"); value.className="value"; value.textContent = `${v} / ${maxR}`;
+    const val  = document.createElement("div"); val.className="value"; val.textContent = `${v} / ${maxR}`;
+    const per  = document.createElement("div"); per.className="perc";  per.textContent = `${pct}%`;
 
-    row.appendChild(label); row.appendChild(value);
-    roundsEl.appendChild(row);
+    row.appendChild(lab); row.appendChild(val); row.appendChild(per);
+    rowsEl.appendChild(row);
   });
-  totalEl.textContent = item.total;
 
-  /* Grafiek */
+  // Total (larger/bolder)
+  totalEl.textContent = `${item.total} / ${ds.maxTotal}`;
+  const finalPct = ds.maxTotal>0 ? Math.round((item.total/ds.maxTotal)*100) : 0;
+  percEl.textContent  = `${finalPct}%`;
+
+  // Chart
   const posMap = positionsPerRound(ds);
-  drawRankChart("rankChart", posMap.get(item.team), ds.data.length, ds.roundCols.map(c=>c.label||""));
+  drawRankChart("rankChart", posMap.get(item.team), ds.data.length, labels);
 }
 
 /* SVG grafiek: x=rondenamen (gekanteld), y=1..N (1 bovenaan), hover tooltips */
@@ -241,23 +249,25 @@ function drawRankChart(svgId, posArr, nTeams, labels){
   svg.innerHTML = "";
   if(!posArr || !posArr.length){ svg.innerHTML = "<text x='12' y='24' class='axis'>Geen data</text>"; return; }
 
-  const W=980, H=520, L=70, R=18, T=14, B=80;  // royale marges
+  const W=1100, H=700, L=75, R=20, T=16, B=120;  // royale marges
   const plotW=W-L-R, plotH=H-T-B;
 
   const x = (i)=> L + (posArr.length<=1? plotW/2 : (i*(plotW/(posArr.length-1))));
   const y = (rank)=> T + ((rank-1) * (plotH/Math.max(1,(nTeams-1)))); // 1 bovenaan
 
-  /* grid + y-labels (we labelen elke rank t/m 50; daarboven label elke 2/5) */
-  const labelStep = (nTeams<=50) ? 1 : (nTeams<=100 ? 2 : 5);
+  /* gridlines for each rank; Y-labels with dynamic step to avoid overlap */
+  const minLabelGapPx = 16; // ensure readability
+  const step = Math.max(1, Math.ceil(nTeams / (plotH / minLabelGapPx)));
   for(let r=1; r<=nTeams; r++){
     const yy=y(r);
+    // gridline
     const gl = document.createElementNS("http://www.w3.org/2000/svg","line");
     gl.setAttribute("x1", L); gl.setAttribute("y1", yy);
     gl.setAttribute("x2", W-R); gl.setAttribute("y2", yy);
     gl.setAttribute("class","gridline");
     svg.appendChild(gl);
-
-    if((r-1)%labelStep===0){
+    // y-label
+    if((r-1)%step===0){
       const lt = document.createElementNS("http://www.w3.org/2000/svg","text");
       lt.setAttribute("x", L-8); lt.setAttribute("y", yy+4);
       lt.setAttribute("text-anchor","end");
@@ -267,25 +277,23 @@ function drawRankChart(svgId, posArr, nTeams, labels){
     }
   }
 
-  /* x‑as labels met hoek (-45°) */
+  /* x‑labels with angle (-60°) */
   labels.forEach((lab,i)=>{
     const tx = document.createElementNS("http://www.w3.org/2000/svg","text");
-    const xi = x(i), yi = H-8;
-    tx.setAttribute("x", xi);
-    tx.setAttribute("y", yi);
-    tx.setAttribute("class","axis");
-    tx.setAttribute("text-anchor","end");
-    tx.setAttribute("transform", `rotate(-45, ${xi}, ${yi})`);
+    const xi = x(i), yi = H-10;
+    tx.setAttribute("x", xi); tx.setAttribute("y", yi);
+    tx.setAttribute("text-anchor","end"); tx.setAttribute("class","axis");
+    tx.setAttribute("transform", `rotate(-60, ${xi}, ${yi})`);
     tx.textContent = lab || `R${i+1}`;
     svg.appendChild(tx);
   });
 
-  /* lijnpad */
+  /* line path */
   let d=""; posArr.forEach((rank,i)=>{ const xi=x(i), yi=y(rank); d += (i===0? `M ${xi} ${yi}` : ` L ${xi} ${yi}`); });
   const path = document.createElementNS("http://www.w3.org/2000/svg","path");
   path.setAttribute("class","rank-path"); path.setAttribute("d", d); svg.appendChild(path);
 
-  /* punten + browser tooltip via <title> */
+  /* dots + tooltips */
   posArr.forEach((rank,i)=>{
     const ci = document.createElementNS("http://www.w3.org/2000/svg","circle");
     ci.setAttribute("class","rank-dot");
