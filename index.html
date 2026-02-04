@@ -79,7 +79,7 @@
       }
       
       .place {
-        grid-row: 1 / 3; /* span across team and bar rows */
+        grid-row: 1 / 4; /* span all 3 rows */
         align-self: start;
       }
       
@@ -92,17 +92,15 @@
       .bar-wrap {
         grid-column: 2;
         grid-row: 2;
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 12px;
-        align-items: center;
       }
       
       .score {
-        /* Score will be inside bar-wrap on mobile */
+        grid-column: 2;
+        grid-row: 3;
         text-align: right;
         font-size: 18px;
         font-weight: 900;
+        margin-top: 8px;
       }
     }
 
