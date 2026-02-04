@@ -35,11 +35,15 @@
     .brand__title{ margin:0; font-size:clamp(34px,4.4vw,50px); color:var(--quiz-red); font-weight:900; line-height:1.1; }
     .brand__subtitle{ margin:0; color:var(--muted); }
 
-    /* Actions */
+    /* Actions – groene rand zoals de bar-outline */
     .actions{ max-width:1200px; margin:16px auto; padding:0 20px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
-    .btn{ padding:10px 16px; border-radius:10px; border:2px solid transparent; font-size:15px; font-weight:600; cursor:pointer; transition:.18s; }
+    .btn{
+      padding:10px 16px; border-radius:10px;
+      border:2px solid var(--spes-green);           /* << dezelfde groene rand */
+      font-size:15px; font-weight:600; cursor:pointer; transition:.18s;
+      background:#fff; color:var(--spes-green);
+    }
     .btn-primary{ background:var(--spes-green); color:#fff; }
-    .btn-secondary{ background:#fff; border:2px solid var(--light-green); color:var(--spes-green); }
     .btn:disabled{ opacity:.6; cursor:not-allowed; }
 
     #meta{ text-align:center; color:var(--muted); font-size:13px; margin-top:-4px; margin-bottom:12px; }
@@ -61,19 +65,20 @@
       box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
     }
 
-    /* Rang-badge (vertical centered) */
+    /* Rang-badge – overal exact zelfde afmeting */
     .place{
       width:56px; height:56px; border-radius:12px;
+      box-sizing:border-box;                           /* << grootte inclusief rand */
       display:grid; place-items:center;
       font-weight:800; font-size:22px;
       color:var(--rank-default-fg);
       background:var(--rank-default-bg);
-      border:2px solid #bfe0bf;
+      border:2px solid #bfe0bf;                        /* << ook voor podium voor gelijke grootte */
       justify-self:center;
     }
-    .place.gold  { background:linear-gradient(135deg, var(--spes-yellow), #ffb300); color:#333; border:none; }
-    .place.silver{ background:linear-gradient(135deg, #e0e0e0, #bdbdbd); color:#333; border:none; }
-    .place.bronze{ background:linear-gradient(135deg, #ffcc80, #fb8c00); color:#333; border:none; }
+    .place.gold  { background:linear-gradient(135deg, var(--spes-yellow), #ffb300); color:#333; }
+    .place.silver{ background:linear-gradient(135deg, #e0e0e0, #bdbdbd); color:#333; }
+    .place.bronze{ background:linear-gradient(135deg, #ffcc80, #fb8c00); color:#333; }
 
     /* Teamlijst (meerdere namen onder elkaar) */
     .teamlist{ display:flex; flex-direction:column; gap:6px; }
@@ -114,12 +119,12 @@
 </header>
 
 <div class="actions">
-  <button id="btnAdd"     class="btn btn-primary">+ Voeg team toe</button>
-  <button id="btnUndo"    class="btn btn-secondary">– Verwijder laatste</button>
-  <button id="btnAll"     class="btn btn-secondary">Toon alle teams</button>
-  <button id="btnTop5"    class="btn btn-secondary">Top 5</button>
-  <button id="btnReset"   class="btn btn-secondary">Reset</button>
-  <button id="btnRefresh" class="btn btn-secondary">Vernieuwen</button>
+  <button id="btnAdd"       class="btn btn-primary">+ Voeg team toe</button>
+  <button id="btnAddTop5"   class="btn">+ Voeg top 5 team toe</button>
+  <button id="btnUndo"      class="btn">– Verwijder laatste</button>
+  <button id="btnAll"       class="btn">Toon alle teams</button>
+  <button id="btnReset"     class="btn">Reset</button>
+  <button id="btnRefresh"   class="btn">Vernieuwen</button>
 </div>
 
 <div id="meta">Nog geen teams getoond</div>
@@ -131,11 +136,14 @@
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvii1ZbzYpDcsoG8qONnw5w5MogMDWmwTNzCd7KhQ9kFw94jTGlWIWy6Vt-JsHsJokY/pub?gid=0&single=true&output=csv";
 
 /* === STATE === */
-let groups = [];          // [{rank, total, teams:[{team,token}]}]
-let visibleGroupCount = 0; // for incremental reveal (from bottom)
-let manualCleared = true; // start empty
-let maxTotal = 0;         // sum of round maxima
-let mode = "incremental"; // 'incremental' | 'all' | 'top5'
+let groups = [];              // [{rank, total, teams:[{team,token}]}]
+let top5Groups = [];          // groups.filter(g=>g.rank<=5)
+let visibleGroupCount = 0;    // incremental (van onder naar boven)
+let visibleTop5Count = 0;     // incremental binnen top-5
+let manualCleared = true;     // start leeg
+let maxTotal = 0;             // som maxima
+let mode = "incremental";     // 'incremental' | 'top5inc' | 'all'
+let modeLock = null;          // null | 'incremental' | 'top5inc'  (no mixing tussen beide "voeg"-modi)
 
 /* Helpers */
 async function fetchCSV(u){
@@ -157,7 +165,7 @@ function roundIndices(headers){
 function parseCSV(text){
   const rows = text.trim().replace(/^\uFEFF/,"").split(/\r?\n/)
     .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => x.replace(/^"|"$/g,"").trim()));
-  if(!rows.length) return {rows:[], headers:[], roundIdxs:[], maxByRound:[], maxTotal:0};
+  if(!rows.length) return {teams:[], maxTotal:1};
 
   const headers = rows[0];
   const hLow = headers.map(h=>h.toLowerCase());
@@ -168,7 +176,7 @@ function parseCSV(text){
   // maxima: last row
   const maxRow = rows.at(-1) || [];
   const maxByRound = rIdx.map(i => Number((maxRow[i]||"0").replace(",","."))||0);
-  const maxTotal = maxByRound.reduce((a,b)=>a+b,0);
+  const maxTotal = maxByRound.reduce((a,b)=>a+b,0) || 1;
 
   // team rows (exclude header and last)
   const trows = rows.slice(1, -1);
@@ -195,10 +203,8 @@ function groupByRank(items){
     if(!map.has(t.rank)) map.set(t.rank, {rank:t.rank, total:t.total, teams:[]});
     map.get(t.rank).teams.push({team:t.team, token:t.token});
   }
-  // sort team names inside group
   for(const g of map.values()) g.teams.sort((a,b)=> a.team.localeCompare(b.team,'nl'));
-  // return in ascending rank (1..n)
-  return Array.from(map.values()).sort((a,b)=> a.rank-b.rank);
+  return Array.from(map.values()).sort((a,b)=> a.rank-b.rank); // ascending rank
 }
 
 function render(){
@@ -215,12 +221,12 @@ function render(){
   let visible = [];
   if(mode === "all"){
     visible = groups;
-  }else if(mode === "top5"){
-    visible = groups.filter(g => g.rank <= 5);
+  }else if(mode === "top5inc"){
+    const take = Math.max(0, Math.min(visibleTop5Count, top5Groups.length));
+    visible = top5Groups.slice(-take);              // van rang 5 omhoog naar 1
   }else{
-    // incremental: take bottom N groups, then show in ascending rank
     const take = Math.max(0, Math.min(visibleGroupCount, groups.length));
-    visible = groups.slice(-take);
+    visible = groups.slice(-take);                  // van laagste rang omhoog
   }
 
   const denom = Math.max(1, maxTotal);
@@ -228,7 +234,6 @@ function render(){
     const card = document.createElement("div");
     card.className = "group-card";
 
-    // rank badge
     const badge = document.createElement("div");
     badge.className = "place";
     if(g.rank===1) badge.classList.add("gold");
@@ -236,7 +241,6 @@ function render(){
     else if(g.rank===3) badge.classList.add("bronze");
     badge.textContent = g.rank;
 
-    // team list
     const list = document.createElement("div");
     list.className = "teamlist";
     g.teams.forEach(t=>{
@@ -250,7 +254,6 @@ function render(){
       list.appendChild(div);
     });
 
-    // single bar for the group (all teams share same total by definition)
     const barWrap = document.createElement("div");
     barWrap.className = "bar-wrap";
     const bar = document.createElement("div");
@@ -258,7 +261,6 @@ function render(){
     bar.style.width = Math.round((g.total/denom)*100) + "%";
     barWrap.appendChild(bar);
 
-    // single score for the group
     const score = document.createElement("div");
     score.className = "score";
     score.textContent = g.total;
@@ -277,21 +279,25 @@ function render(){
 }
 
 function updateButtons(){
-  const add  = document.getElementById("btnAdd");
-  const undo = document.getElementById("btnUndo");
-  const all  = document.getElementById("btnAll");
-  const top5 = document.getElementById("btnTop5");
-  const rst  = document.getElementById("btnReset");
-  const ref  = document.getElementById("btnRefresh");
+  const add    = document.getElementById("btnAdd");
+  const addTop = document.getElementById("btnAddTop5");
+  const undo   = document.getElementById("btnUndo");
+  const all    = document.getElementById("btnAll");
+  const rst    = document.getElementById("btnReset");
+  const ref    = document.getElementById("btnRefresh");
+
+  // Lock‑regels (geen mixing tussen “voeg”‑modi)
+  add.disabled    = (modeLock === 'top5inc');
+  addTop.disabled = (modeLock === 'incremental');
 
   if (manualCleared){
-    add.disabled=false; undo.disabled=true; all.disabled=false; top5.disabled=false; rst.disabled=false; ref.disabled=false;
-  } else if (mode === "all" || mode === "top5") {
-    add.disabled=false; undo.disabled=false; all.disabled=true; top5.disabled=true; rst.disabled=false; ref.disabled=false;
+    undo.disabled=true; all.disabled=false; rst.disabled=false; ref.disabled=false;
+  } else if (mode === "all"){
+    undo.disabled=false; all.disabled=true;  rst.disabled=false; ref.disabled=false;
+  } else if (mode === "top5inc"){
+    undo.disabled = (visibleTop5Count<=0);
   } else {
-    add.disabled = (visibleGroupCount >= groups.length);
-    undo.disabled= (visibleGroupCount <= 0);
-    all.disabled = false; top5.disabled=false; rst.disabled=false; ref.disabled=false;
+    undo.disabled = (visibleGroupCount<=0);
   }
 }
 
@@ -303,33 +309,51 @@ async function refresh(preserve=true){
 
   const ranked = denseRank(parsed.teams);
   groups = groupByRank(ranked);
+  top5Groups = groups.filter(g => g.rank <= 5);
 
   if(preserve){
-    if(mode==="incremental"){
-      // clamp visibleGroupCount
-      visibleGroupCount = Math.max(0, Math.min(visibleGroupCount, groups.length));
-    }
+    visibleGroupCount  = Math.max(0, Math.min(visibleGroupCount,  groups.length));
+    visibleTop5Count   = Math.max(0, Math.min(visibleTop5Count,   top5Groups.length));
   }else{
-    manualCleared = true; mode="incremental"; visibleGroupCount=0;
+    manualCleared = true; mode="incremental"; modeLock=null; visibleGroupCount=0; visibleTop5Count=0;
   }
   render();
 }
 
-document.getElementById("btnAdd").onclick  = ()=>{
+document.getElementById("btnAdd").onclick = ()=>{
+  if(modeLock && modeLock!=='incremental'){ alert("Reset eerst om van modus te wisselen."); return; }
+  modeLock='incremental';
   manualCleared=false; mode="incremental";
   visibleGroupCount = Math.min(visibleGroupCount+1, groups.length);
   render();
 };
-document.getElementById("btnUndo").onclick = ()=>{
-  if (manualCleared) return;
-  if (mode !== "incremental"){ mode="incremental"; }
-  visibleGroupCount = Math.max(visibleGroupCount-1, 0);
-  if(visibleGroupCount===0) manualCleared=true;
+
+document.getElementById("btnAddTop5").onclick = ()=>{
+  if(modeLock && modeLock!=='top5inc'){ alert("Reset eerst om van modus te wisselen."); return; }
+  modeLock='top5inc';
+  manualCleared=false; mode="top5inc";
+  visibleTop5Count = Math.min(visibleTop5Count+1, top5Groups.length);
   render();
 };
-document.getElementById("btnAll").onclick  = ()=>{ manualCleared=false; mode="all";  visibleGroupCount=groups.length; render(); };
-document.getElementById("btnTop5").onclick = ()=>{ manualCleared=false; mode="top5"; visibleGroupCount=groups.length; render(); };
-document.getElementById("btnReset").onclick= ()=>{ manualCleared=true; mode="incremental"; visibleGroupCount=0; render(); };
+
+document.getElementById("btnUndo").onclick = ()=>{
+  if (manualCleared) return;
+  if (mode === "top5inc"){
+    visibleTop5Count = Math.max(visibleTop5Count-1, 0);
+    if(visibleTop5Count===0) manualCleared=true;
+  } else if (mode === "incremental"){
+    visibleGroupCount = Math.max(visibleGroupCount-1, 0);
+    if(visibleGroupCount===0) manualCleared=true;
+  } else {
+    // vanuit "all": stap terug naar incremental lock indien die bestond
+    if(modeLock==='top5inc'){ mode='top5inc'; visibleTop5Count = Math.max(top5Groups.length-1,0); }
+    else { mode='incremental'; visibleGroupCount = Math.max(groups.length-1,0); }
+  }
+  render();
+};
+
+document.getElementById("btnAll").onclick  = ()=>{ manualCleared=false; mode="all"; render(); };
+document.getElementById("btnReset").onclick= ()=>{ manualCleared=true; mode="incremental"; modeLock=null; visibleGroupCount=0; visibleTop5Count=0; render(); };
 document.getElementById("btnRefresh").onclick = ()=>{ refresh(true); };
 
 /* Start: laad data, maar toon niets tot gebruiker kiest */

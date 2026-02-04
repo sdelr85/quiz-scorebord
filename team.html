@@ -35,50 +35,50 @@
     .wrap{ max-width:1200px; margin:0 auto; padding:0 20px 40px; }
 
     .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:16px;
-      box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
-      margin-bottom:16px;
+      background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px;
+      box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05); margin-bottom:16px;
     }
 
     .pill{ display:inline-block; padding:4px 10px; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:13px; margin-bottom:12px; }
 
-    /* Ronde-lijst (zonder balken) — met rondebadge + score/max + % */
+    /* Ronde-lijst – badge + score/max + % */
     .rows{ display:grid; gap:10px; }
     .row{
-      display:grid; grid-template-columns: minmax(320px, 1fr) 120px 90px;
+      display:grid; grid-template-columns: minmax(320px, 1fr) 140px 100px;
       gap:12px; align-items:center; padding:6px 0; border-bottom:1px dashed var(--line);
     }
     .row:last-child{ border-bottom:none; }
 
     .label{ display:flex; align-items:center; gap:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700; }
     .rnum{
-      min-width:38px; height:38px; border-radius:10px;
+      min-width:38px; height:38px; border-radius:10px; box-sizing:border-box;
       display:grid; place-items:center; font-weight:800; color:var(--rank-default-fg);
       background:var(--rank-default-bg); border:2px solid #bfe0bf; font-size:16px; flex:0 0 auto;
     }
     .value{ text-align:right; font-weight:800; }
-    .perc { text-align:right; color:#1b5e20; font-weight:800; }
+    .perc { text-align:right; color:#1B5E20; font-weight:800; }
 
+    /* Totaalrij (geen label "Totaal", wel uitgelijnd + groter) */
     .total-row{
-      display:grid; grid-template-columns: minmax(320px, 1fr) 120px 90px;
+      display:grid; grid-template-columns: minmax(320px, 1fr) 140px 100px;
       gap:12px; align-items:center; padding-top:10px;
       font-weight:900; font-size:20px;
     }
+    .total-row .perc { color:#1B5E20; } /* ook groen */
+    .total-row .label { visibility:hidden; } /* lege 1e kolom, houdt uitlijning */
+    .total-row .label::after{ content:""; }
 
     .back{ margin-top:18px; }
     .back a{ color:var(--spes-green); text-decoration:none; font-weight:700; }
     .back a:hover{ text-decoration:underline; }
 
-    /* Grafiek – hoger + brede marges + schuine labels */
+    /* Grafiek – hoger, labels dichter bij as */
     .chart{
       background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px;
       box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
     }
     .chart h3{ margin:0 0 8px; font-size:18px; }
-    .chart svg{ width:100%; height:700px; display:block; } /* nog groter */
+    .chart svg{ width:100%; height:700px; display:block; }
     .axis text{ fill:#666; font-size:12px; }
     .gridline{ stroke:#e9eaec; stroke-width:1; }
     .rank-path{ fill:none; stroke:var(--spes-green); stroke-width:3; }
@@ -105,9 +105,9 @@
     <div class="rows" id="roundList"></div>
 
     <div class="total-row">
-      <div>Totaal</div>
-      <div id="totalScore">0 / 0</div>
-      <div id="totalPerc">0%</div>
+      <div class="label"><span class="rnum" style="opacity:0">0</span><span></span></div> <!-- lege badge/label om uit te lijnen -->
+      <div id="totalScore" class="value">0 / 0</div>
+      <div id="totalPerc"  class="perc">0%</div>
     </div>
   </div>
 
@@ -176,7 +176,6 @@ function denseRanks(items){
   sorted.forEach((x,i)=>{ if(prev===null||x.total<prev) rank=i+1; map.set(x.team,rank); prev=x.total; });
   return map;
 }
-/* Positie per ronde (cumulatief) */
 function positionsPerRound(ds){
   const {data, roundCols} = ds;
   const R = roundCols.length;
@@ -208,11 +207,9 @@ function renderTeam(ds, keyRaw){
 
   title.textContent = item.team;
 
-  // Eindpositie
   const endRank = denseRanks(ds.data.map(d => ({team:d.team,total:d.total}))).get(item.team) || "-";
   rankInfo.textContent = `Positie: ${endRank} / ${ds.data.length}`;
 
-  // Per ronde: badge (i+1), label (no number), value "score / max", percentage
   rowsEl.innerHTML="";
   const labels = ds.roundCols.map(c => (c.label||"").trim());
   item.rounds.forEach((v,i)=>{
@@ -220,7 +217,6 @@ function renderTeam(ds, keyRaw){
     const pct  = maxR>0 ? Math.round((v/maxR)*100) : 0;
 
     const row  = document.createElement("div"); row.className="row";
-
     const lab  = document.createElement("div"); lab.className="label";
     const badge= document.createElement("div"); badge.className="rnum"; badge.textContent = (i+1);
     const txt  = document.createElement("div"); txt.textContent = labels[i] || `R${i+1}`;
@@ -233,40 +229,36 @@ function renderTeam(ds, keyRaw){
     rowsEl.appendChild(row);
   });
 
-  // Total (larger/bolder)
   totalEl.textContent = `${item.total} / ${ds.maxTotal}`;
   const finalPct = ds.maxTotal>0 ? Math.round((item.total/ds.maxTotal)*100) : 0;
   percEl.textContent  = `${finalPct}%`;
 
-  // Chart
   const posMap = positionsPerRound(ds);
   drawRankChart("rankChart", posMap.get(item.team), ds.data.length, labels);
 }
 
-/* SVG grafiek: x=rondenamen (gekanteld), y=1..N (1 bovenaan), hover tooltips */
+/* SVG grafiek: x=rondenamen (dichter bij as), y=1..N (1 bovenaan), hover tooltips */
 function drawRankChart(svgId, posArr, nTeams, labels){
   const svg = document.getElementById(svgId);
   svg.innerHTML = "";
   if(!posArr || !posArr.length){ svg.innerHTML = "<text x='12' y='24' class='axis'>Geen data</text>"; return; }
 
-  const W=1100, H=700, L=75, R=20, T=16, B=120;  // royale marges
+  // lagere ondermarge -> labels dichter bij as
+  const W=1100, H=700, L=75, R=20, T=16, B=60;
   const plotW=W-L-R, plotH=H-T-B;
 
   const x = (i)=> L + (posArr.length<=1? plotW/2 : (i*(plotW/(posArr.length-1))));
   const y = (rank)=> T + ((rank-1) * (plotH/Math.max(1,(nTeams-1)))); // 1 bovenaan
 
-  /* gridlines for each rank; Y-labels with dynamic step to avoid overlap */
-  const minLabelGapPx = 16; // ensure readability
+  const minLabelGapPx = 16;
   const step = Math.max(1, Math.ceil(nTeams / (plotH / minLabelGapPx)));
   for(let r=1; r<=nTeams; r++){
     const yy=y(r);
-    // gridline
     const gl = document.createElementNS("http://www.w3.org/2000/svg","line");
     gl.setAttribute("x1", L); gl.setAttribute("y1", yy);
     gl.setAttribute("x2", W-R); gl.setAttribute("y2", yy);
     gl.setAttribute("class","gridline");
     svg.appendChild(gl);
-    // y-label
     if((r-1)%step===0){
       const lt = document.createElementNS("http://www.w3.org/2000/svg","text");
       lt.setAttribute("x", L-8); lt.setAttribute("y", yy+4);
@@ -277,10 +269,10 @@ function drawRankChart(svgId, posArr, nTeams, labels){
     }
   }
 
-  /* x‑labels with angle (-60°) */
+  // x‑labels: zeer dichtbij de plot-as (T+plotH + 12)
   labels.forEach((lab,i)=>{
     const tx = document.createElementNS("http://www.w3.org/2000/svg","text");
-    const xi = x(i), yi = H-10;
+    const xi = x(i), yi = T + plotH + 12;
     tx.setAttribute("x", xi); tx.setAttribute("y", yi);
     tx.setAttribute("text-anchor","end"); tx.setAttribute("class","axis");
     tx.setAttribute("transform", `rotate(-60, ${xi}, ${yi})`);
@@ -288,12 +280,10 @@ function drawRankChart(svgId, posArr, nTeams, labels){
     svg.appendChild(tx);
   });
 
-  /* line path */
   let d=""; posArr.forEach((rank,i)=>{ const xi=x(i), yi=y(rank); d += (i===0? `M ${xi} ${yi}` : ` L ${xi} ${yi}`); });
   const path = document.createElementNS("http://www.w3.org/2000/svg","path");
   path.setAttribute("class","rank-path"); path.setAttribute("d", d); svg.appendChild(path);
 
-  /* dots + tooltips */
   posArr.forEach((rank,i)=>{
     const ci = document.createElementNS("http://www.w3.org/2000/svg","circle");
     ci.setAttribute("class","rank-dot");
