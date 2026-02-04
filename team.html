@@ -145,7 +145,7 @@
 
   <div class="chart">
     <h3>Evolutie van de positie per ronde</h3>
-    <svg id="rankChart" viewBox="0 0 1100 600" preserveAspectRatio="none" aria-label="Positie per ronde"></svg>
+    <svg id="rankChart" viewBox="0 0 900 600" preserveAspectRatio="none" aria-label="Positie per ronde"></svg>
   </div>
 
   <p class="back">
@@ -294,7 +294,7 @@ function drawRankChart(svgId, posArr, nTeams, labels){
   if(!posArr || !posArr.length){ svg.innerHTML = "<text x='12' y='24' class='axis'>Geen data</text>"; return; }
 
   // increased bottom margin for rotated x-labels
-  const W=1200, H=600, L=75, R=20, T=16, B=120;
+  const W=900, H=600, L=75, R=20, T=16, B=120;
   const plotW=W-L-R, plotH=H-T-B;
 
   const x = (i)=> L + (posArr.length<=1? plotW/2 : (i*(plotW/(posArr.length-1))));
