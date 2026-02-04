@@ -114,6 +114,71 @@
     .gridline{ stroke:#e9eaec; stroke-width:1; }
     .rank-path{ fill:none; stroke:var(--spes-green); stroke-width:3; }
     .rank-dot{ fill:var(--spes-green); stroke:#fff; stroke-width:1.5; cursor:pointer; }
+  
+    /* Mobile responsive layout */
+    @media (max-width: 768px) {
+      .row, .total-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      
+      .label {
+        order: 1;
+        margin-bottom: 4px;
+      }
+      
+      .value {
+        order: 2;
+        text-align: left;
+        font-size: 14px;
+      }
+      
+      .round-bar-wrap {
+        order: 3;
+      }
+      
+      .perc {
+        order: 4;
+        text-align: left;
+        font-size: 14px;
+        margin-top: 4px;
+      }
+      
+      .total-row {
+        padding-top: 16px;
+        border-top: 2px solid var(--line);
+        margin-top: 8px;
+      }
+      
+      .total-row .label {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .brand__title {
+        font-size: 28px;
+      }
+      
+      .rnum {
+        min-width: 32px;
+        height: 32px;
+        font-size: 14px;
+      }
+      
+      .row, .total-row {
+        padding: 4px 0;
+      }
+      
+      .chart svg {
+        height: 400px;
+      }
+      
+      .chart h3 {
+        font-size: 16px;
+      }
+    }
+  
   </style>
 </head>
 <body>
