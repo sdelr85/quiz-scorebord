@@ -73,20 +73,36 @@
     /* Mobile responsive: stack layout on smaller screens */
     @media (max-width: 768px) {
       .group-card {
-        grid-template-columns: 60px 1fr; /* rank | content */
-        gap:12px;
+        grid-template-columns: auto 1fr; /* rank badge | content area */
+        gap: 12px;
+        align-items: start;
       }
+      
+      .place {
+        grid-row: 1 / 3; /* span across team and bar rows */
+        align-self: start;
+      }
+      
       .teamlist {
         grid-column: 2;
+        grid-row: 1;
+        margin-bottom: 8px;
       }
+      
       .bar-wrap {
         grid-column: 2;
-        order: -1; /* show bar above teams */
+        grid-row: 2;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
       }
+      
       .score {
-        grid-column: 2;
+        /* Score will be inside bar-wrap on mobile */
         text-align: right;
         font-size: 18px;
+        font-weight: 900;
       }
     }
 
@@ -319,8 +335,15 @@ function render(){
 
     card.appendChild(badge);
     card.appendChild(list);
-    card.appendChild(barWrap);
-    card.appendChild(score);
+    
+    // On mobile, score goes inside bar-wrap; on desktop it's separate
+    if (window.innerWidth <= 768) {
+      barWrap.appendChild(score);
+      card.appendChild(barWrap);
+    } else {
+      card.appendChild(barWrap);
+      card.appendChild(score);
+    }
     root.appendChild(card);
   }
 
