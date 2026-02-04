@@ -120,41 +120,59 @@
     .rank-dot{ fill:var(--spes-green); stroke:#fff; stroke-width:1.5; cursor:pointer; }
   
     /* Mobile responsive layout */
+    /* Mobile responsive layout */
     @media (max-width: 768px) {
       .row, .total-row {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
         gap: 8px;
       }
       
       .label {
-        order: 1;
         margin-bottom: 4px;
       }
       
       .value {
-        order: 2;
-        text-align: left;
-        font-size: 14px;
+        display: none;
       }
       
       .round-bar-wrap {
-        order: 3;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
       }
       
       .perc {
-        order: 4;
-        text-align: left;
+        text-align: right;
         font-size: 14px;
-        margin-top: 4px;
+        white-space: nowrap;
+        flex: 0 0 auto;
       }
       
       .total-row {
         padding-top: 16px;
         margin-top: 8px;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
       }
       
       .total-row .label {
         display: flex;
+        flex: 0 0 auto;
+      }
+      
+      .total-row .value {
+        display: none;
+      }
+      
+      .total-row .round-bar-wrap {
+        flex: 1;
+      }
+      
+      .total-row .perc {
+        flex: 0 0 auto;
       }
 
       .chart {
