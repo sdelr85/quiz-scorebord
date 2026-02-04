@@ -3,81 +3,91 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Quiz Nostra – Teamdetail</title>
+  <title>Quiz Nostra – Scorebord</title>
 
   <style>
     :root{
+      /* Branding */
       --quiz-red:#E53935;
       --spes-green:#2E7D32;
       --spes-yellow:#FDD835;
       --light-green:#A5D6A7;
 
+      /* UI */
       --bg:#f6f7f8;
       --card:#fff;
       --text:#222;
       --muted:#60666d;
       --line:#e1e2e5;
+
+      /* Badges (niet‑podium) */
+      --rank-default-bg:#CFE8CF;
+      --rank-default-fg:#1B5E20;
     }
 
     body{ margin:0; background:var(--bg); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
 
-    /* Header (zelfde stijl) */
-    .site-header{ background:#fff; border-bottom:4px solid var(--spes-green); padding:20px; margin-bottom:18px; }
+    /* Header */
+    .site-header{ background:#fff; border-bottom:4px solid var(--spes-green); padding:20px; }
     .brand{ max-width:1050px; margin:0 auto; display:flex; align-items:center; gap:20px; }
     .brand__logo{ height:clamp(72px, 9vw, 110px); width:auto; object-fit:contain; }
     .brand__titles{ display:flex; flex-direction:column; gap:4px; }
     .brand__title{ margin:0; font-size:clamp(34px,4.4vw,50px); color:var(--quiz-red); font-weight:900; line-height:1.1; }
     .brand__subtitle{ margin:0; color:var(--muted); }
 
-    .wrap{ max-width:1050px; margin:0 auto; padding:0 20px 36px; }
+    /* Actions */
+    .actions{ max-width:1050px; margin:16px auto; padding:0 20px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    .btn{ padding:10px 16px; border-radius:10px; border:2px solid transparent; font-size:15px; font-weight:600; cursor:pointer; transition:.18s; }
+    .btn-primary{ background:var(--spes-green); color:#fff; }
+    .btn-secondary{ background:#fff; border:2px solid var(--light-green); color:var(--spes-green); }
+    .btn:disabled{ opacity:.6; cursor:not-allowed; }
 
+    #meta{ text-align:center; color:var(--muted); font-size:13px; margin-top:-4px; margin-bottom:12px; }
+
+    /* Lijst */
+    .wrap{ max-width:1050px; margin:0 auto; padding:0 20px 40px; }
+    .grid{ display:grid; gap:14px; }
+
+    /* Kaart in kolommen: [ rank | team | balk | score ]  */
     .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:16px;
-      box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
-      margin-bottom:16px;
-    }
-
-    .pill{ display:inline-block; padding:4px 10px; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:13px; margin-bottom:12px; }
-
-    /* Ronde-lijst zonder balken */
-    .rows{ display:grid; gap:8px; }
-    .row{
       display:grid;
-      grid-template-columns: minmax(220px, 1fr) auto;
-      gap:12px;
+      grid-template-columns: 72px minmax(260px, 3.2fr) 2.2fr 72px; /* teamnaam ruimer, balk korter */
       align-items:center;
-      padding:6px 0;
-      border-bottom:1px dashed var(--line);
-    }
-    .row:last-child{ border-bottom:none; }
-    .row .label{
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      font-weight:700;
-    }
-    .row .value{ text-align:right; font-weight:800; }
-
-    /* Terug-link */
-    .back{ margin-top:18px; }
-    .back a{ color:var(--spes-green); text-decoration:none; font-weight:700; }
-    .back a:hover{ text-decoration:underline; }
-
-    /* Grafiek */
-    .chart{
+      gap:14px;
       background:var(--card);
       border:1px solid var(--line);
       border-radius:14px;
-      padding:16px;
+      padding:14px 16px;
       box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
     }
-    .chart h3{ margin:0 0 8px; font-size:18px; }
-    .chart svg{ width:100%; height:260px; display:block; }
-    .axis text{ fill:#666; font-size:12px; }
-    .gridline{ stroke:#e9eaec; stroke-width:1; }
-    .rank-path{ fill:none; stroke:var(--spes-green); stroke-width:3; }
-    .rank-dot{ fill:var(--spes-green); stroke:#fff; stroke-width:1.5; }
+
+    /* Rang-badge */
+    .place{
+      width:52px; height:52px; border-radius:12px;
+      display:grid; place-items:center;
+      font-weight:800; font-size:20px;
+      color:var(--rank-default-fg);
+      background:var(--rank-default-bg);
+      border:2px solid #bfe0bf;
+      justify-self:center;
+    }
+    .place.gold  { background:linear-gradient(135deg, var(--spes-yellow), #ffb300); color:#333; border:none; }
+    .place.silver{ background:linear-gradient(135deg, #e0e0e0, #bdbdbd); color:#333; border:none; }
+    .place.bronze{ background:linear-gradient(135deg, #ffcc80, #fb8c00); color:#333; border:none; }
+
+    /* Teamnaam – enkel-lijn + ellipsis */
+    .team{
+      font-weight:800;
+      font-size:clamp(15px, 1.8vw, 20px);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .team a{ color:var(--text); text-decoration:none; }
+    .team a:hover{ text-decoration:underline; }
+
+    .bar-wrap{ width:100%; height:10px; background:#efefef; border-radius:999px; overflow:hidden; }
+    .bar{ height:100%; width:0%; background:var(--spes-green); transition:width .45s ease; }
+
+    .score{ text-align:right; font-size:22px; font-weight:800; color:var(--text); }
   </style>
 </head>
 <body>
@@ -86,222 +96,179 @@
   <div class="brand">
     <img src="assets/ouderraad-logo.png" alt="Ouderraad Spes Nostra Kuurne" class="brand__logo">
     <div class="brand__titles">
-      <h1 class="brand__title" id="teamTitle">Team</h1>
-      <p class="brand__subtitle">Detailoverzicht</p>
+      <h1 class="brand__title">Quiz Nostra</h1>
+      <p class="brand__subtitle">Live scorebord</p>
     </div>
   </div>
 </header>
 
-<div class="wrap">
-
-  <div class="card">
-    <div id="rankInfo" class="pill">Positie: -</div>
-
-    <div class="rows" id="roundList"></div>
-
-    <div style="display:flex; justify-content:space-between; margin-top:12px; font-weight:800;">
-      <span>Totaal</span><span id="totalScore">0</span>
-    </div>
-  </div>
-
-  <div class="chart">
-    <h3>Evolutie van de positie per ronde</h3>
-    <svg id="rankChart" viewBox="0 0 880 260" preserveAspectRatio="none" aria-label="Positie per ronde"></svg>
-  </div>
-
-  <p class="back">
-    <a href="index.html" onclick="if(document.referrer){history.back(); return false;}">← Terug naar scorebord</a>
-  </p>
+<div class="actions">
+  <button id="btnAdd"     class="btn btn-primary">+ Voeg team toe</button>
+  <button id="btnUndo"    class="btn btn-secondary">– Verwijder laatste</button>
+  <button id="btnAll"     class="btn btn-secondary">Toon alle teams</button>
+  <button id="btnReset"   class="btn btn-secondary">Reset</button>
+  <button id="btnRefresh" class="btn btn-secondary">Vernieuwen</button>
 </div>
 
+<div id="meta">Nog geen teams getoond</div>
+
+<div class="wrap"><div id="list" class="grid"></div></div>
+
 <script>
-/*** CONFIG ***/
+/* === CONFIG === */
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvii1ZbzYpDcsoG8qONnw5w5MogMDWmwTNzCd7KhQ9kFw94jTGlWIWy6Vt-JsHsJokY/pub?gid=0&single=true&output=csv";
 
-/*** Helpers ***/
-function roundNumberFromName(n){
-  const m = String(n).toLowerCase().match(/r(?:onde)?\s*(\d+)/);
-  return m ? parseInt(m[1],10) : null;
-}
+/* === STATE === */
+let fullData = [];
+let visibleCount = 0;
+/* Start leeg: gebruiker kiest Add/All of klikt Vernieuwen en dan Add/All */
+let manualCleared = true;
+
+/* Helpers */
 async function fetchCSV(u){
   const r = await fetch(u + "&_t=" + Date.now(), {cache:"no-store"});
   if(!r.ok) throw new Error("CSV ophalen mislukt");
   return await r.text();
 }
+
+/* Column C..(last-1 if 'TOTAL'): detect round columns from headers */
+function getRoundColumnIndices(headers){
+  const start = 2; // column C (0=A,1=B,2=C)
+  let end = headers.length - 1;
+  const lastLabel = headers[headers.length-1]?.trim().toLowerCase();
+  if (lastLabel === "total" || lastLabel === "totaal") end = headers.length - 2;
+  // generate indices from start..end inclusive
+  const idxs = [];
+  for(let i=start;i<=end;i++) idxs.push(i);
+  return idxs;
+}
+
 function parseCSV(text){
   const rows = text.trim().replace(/^\uFEFF/,"").split(/\r?\n/)
     .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => x.replace(/^"|"$/g,"").trim()));
-  if(!rows.length) return {data:[], roundCols:[]};
+  if(!rows.length) return [];
 
   const headers = rows[0].map(h=>h.trim());
-  const hLow    = headers.map(h=>h.toLowerCase());
+  const hLow = headers.map(h=>h.toLowerCase());
   const teamIdx  = hLow.indexOf("team");
   const tokenIdx = hLow.indexOf("token");
 
-  const roundCols = headers
-    .map((h,i)=>({ label:h, i, nr:roundNumberFromName(h) }))
-    .filter(o=>o.nr!==null)
-    .sort((a,b)=>a.nr-b.nr);
+  const roundIdxs = getRoundColumnIndices(headers);
 
   const data = rows.slice(1).map(r=>{
-    const team  = (r[teamIdx]  || "");
-    const token = (r[tokenIdx] || "");
-    const rounds = roundCols.map(c => Number((r[c.i]||"0").replace(",","."))||0);
-    const total  = rounds.reduce((a,b)=>a+b,0);
-    return {team, token, rounds, total};
+    const team  = teamIdx>=0 ? (r[teamIdx]||"") : "";
+    const token = tokenIdx>=0 ? (r[tokenIdx]||"") : "";
+    let total=0;
+    for(const i of roundIdxs){
+      total += Number((r[i]||"0").replace(",",".")) || 0;
+    }
+    return {team, token, total};
   }).filter(x=>x.team);
 
-  return {data, roundCols};
+  return data;
 }
 
-/*** Ranking helpers ***/
-function denseRanks(items){
-  const sorted=[...items].sort((a,b)=>b.total-a.total||a.team.localeCompare(b.team,'nl'));
-  let prev=null, rank=0; const map=new Map();
-  sorted.forEach((x,i)=>{ if(prev===null||x.total<prev) rank=i+1; map.set(x.team,rank); prev=x.total; });
-  return map;
-}
-/* Positie per ronde (op cumulatieve score) */
-function computePositionsOverRounds(ds){
-  const {data, roundCols} = ds;
-  const R = roundCols.length;
-  // cumulatieve totals per team
-  const cum = data.map(d => ({
-    team:d.team,
-    cum: d.rounds.reduce((acc,v,i)=>{ acc[i]=(i?acc[i-1]:0)+v; return acc; }, Array(R).fill(0))
-  }));
-  // per ronde rank berekenen
-  const positions = new Map(); // team -> [r1..rR]
-  data.forEach(d=>positions.set(d.team, Array(R).fill(null)));
-  for(let r=0; r<R; r++){
-    const totals = cum.map(x => ({team:x.team, total:x.cum[r]}));
-    const rmap = denseRanks(totals);
-    totals.forEach(x => positions.get(x.team)[r] = rmap.get(x.team));
-  }
-  return positions;
+function computeRanks(list){
+  list.sort((a,b)=> b.total - a.total || a.team.localeCompare(b.team,'nl'));
+  let prev=null, rank=0;
+  list.forEach((x,i)=>{ if(prev===null||x.total<prev) rank=i+1; x.rank=rank; prev=x.total; });
+  return list;
 }
 
-/*** Render ***/
-function renderTeam(ds, key){
-  const keyLow = key.trim().toLowerCase();
-  const item = ds.data.find(x => (x.token||x.team).toLowerCase() === keyLow);
-  const title   = document.getElementById("teamTitle");
-  const roundsEl= document.getElementById("roundList");
-  const totalEl = document.getElementById("totalScore");
-  const rankInfo= document.getElementById("rankInfo");
+function render(list){
+  const root = document.getElementById("list");
+  const meta = document.getElementById("meta");
+  root.innerHTML = "";
 
-  if(!item){
-    title.textContent = "Team niet gevonden";
-    roundsEl.innerHTML = "<p>Niet gevonden.</p>";
+  if (manualCleared) {
+    meta.textContent = "Nog geen teams getoond";
+    updateButtons();
     return;
   }
 
-  title.textContent = item.team;
+  const toShow = list.slice(-visibleCount);
+  const max = Math.max(1, ...toShow.map(x=>x.total));
 
-  // Eindpositie op totaalscore
-  const endRank = denseRanks(ds.data.map(d => ({team:d.team, total:d.total}))).get(item.team) || "-";
-  rankInfo.textContent = `Positie: ${endRank} / ${ds.data.length}`;
+  toShow.forEach(row=>{
+    const card = document.createElement("div");
+    card.className = "card";
 
-  // Tabel met ronde(nummer). naam + score (geen balken)
-  roundsEl.innerHTML = "";
-  const names = ds.roundCols.map((c,i)=>{
-    // Toon "1. X" of "R1" als er geen expliciete naam is
-    const clean = c.label || (`R${i+1}`);
-    return `${i+1}. ${clean}`;
+    const place = document.createElement("div");
+    place.className = "place";
+    if(row.rank===1) place.classList.add("gold");
+    else if(row.rank===2) place.classList.add("silver");
+    else if(row.rank===3) place.classList.add("bronze");
+    place.textContent = row.rank;
+
+    const team = document.createElement("div");
+    team.className = "team";
+    const a = document.createElement("a");
+    const q = row.token ? ("t="+encodeURIComponent(row.token)) : ("team="+encodeURIComponent(row.team));
+    a.href = "team.html?"+q;
+    a.textContent = row.team;
+    team.appendChild(a);
+
+    const barWrap = document.createElement("div");
+    barWrap.className = "bar-wrap";
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    bar.style.width = Math.round((row.total / max) * 100) + "%";
+    barWrap.appendChild(bar);
+
+    const score = document.createElement("div");
+    score.className = "score";
+    score.textContent = row.total;
+
+    card.appendChild(place);
+    card.appendChild(team);
+    card.appendChild(barWrap);
+    card.appendChild(score);
+    root.appendChild(card);
   });
 
-  item.rounds.forEach((v,i)=>{
-    const row = document.createElement("div");
-    row.className = "row";
-    const l = document.createElement("div");
-    l.className = "label";
-    l.textContent = names[i];
-    const r = document.createElement("div");
-    r.className = "value";
-    r.textContent = v;
-    row.appendChild(l); row.appendChild(r);
-    roundsEl.appendChild(row);
-  });
+  meta.textContent = (toShow.length ? `Getoond: ${toShow.length}/${list.length} – ` : "Nog geen teams getoond – ")
+                   + "Laatst bijgewerkt: " + new Date().toLocaleTimeString();
 
-  totalEl.textContent = item.total;
-
-  // Grafiek: positie per ronde
-  const pos = computePositionsOverRounds(ds);
-  drawRankChart("rankChart", posChart(svgId, posArr, nTeams, labels){
-  const svg = document.getElementById(svgId);
-  svg.innerHTML = "";
-  if(!posArr || !posArr.length){ svg.innerHTML = "<text x='12' y='24' class='axis'>Geen data</text>"; return; }
-
-  const W=880, H=260, L=50, R=12, T=10, B=36;
-  const plotW=W-L-R, plotH=H-T-B;
-
-  // helpers
-  const x = (i)=> L + (posArr.length<=1? plotW/2 : (i*(plotW/(posArr.length-1))));
-  const y = (rank)=> T + ((rank-1) * (plotH/Math.max(1,(nTeams-1)))); // 1 bovenaan
-
-  // horizontale grid (bij voorkeur om de 5 ranks)
-  const step = Math.max(1, Math.round(nTeams/10)); // dynamisch; vaak ~5
-  for(let r=1; r<=nTeams; r+=step){
-    const yy=y(r);
-    const gl = document.createElementNS("http://www.w3.org/2000/svg","line");
-    gl.setAttribute("x1", L); gl.setAttribute("y1", yy);
-    gl.setAttribute("x2", W-R); gl.setAttribute("y2", yy);
-    gl.setAttribute("class","gridline");
-    svg.appendChild(gl);
-
-    const lt = document.createElementNS("http://www.w3.org/2000/svg","text");
-    lt.setAttribute("x", 8); lt.setAttribute("y", yy+4);
-    lt.setAttribute("class","axis");
-    lt.textContent = r;
-    svg.appendChild(lt);
-  }
-
-  // x-as labels (rondenamen, eventueel ingekort)
-  labels.forEach((lab,i)=>{
-    const tx = document.createElementNS("http://www.w3.org/2000/svg","text");
-    tx.setAttribute("x", x(i));
-    tx.setAttribute("y", H-10);
-    tx.setAttribute("text-anchor","middle");
-    tx.setAttribute("class","axis");
-    tx.textContent = lab || `R${i+1}`;
-    svg.appendChild(tx);
-  });
-
-  // lijnpad
-  let d = "";
-  posArr.forEach((rank,i)=>{
-    const xi=x(i), yi=y(rank);
-    d += (i===0? `M ${xi} ${yi}` : ` L ${xi} ${yi}`);
-  });
-  const path = document.createElementNS("http://www.w3.org/2000/svg","path");
-  path.setAttribute("class","rank-path");
-  path.setAttribute("d", d);
-  svg.appendChild(path);
-
-  // punten
-  posArr.forEach((rank,i)=>{
-    const ci = document.createElementNS("http://www.w3.org/2000/svg","circle");
-    ci.setAttribute("class","rank-dot");
-    ci.setAttribute("cx", x(i)); ci.setAttribute("cy", y(rank)); ci.setAttribute("r","4.5");
-    svg.appendChild(ci);
-  });
+  updateButtons();
 }
 
-/*** Init ***/
-(async function(){
-  const p   = new URLSearchParams(location.search);
-  const key = (p.get("t") || p.get("team") || "").trim();
-  if(!key){ document.getElementById("teamTitle").textContent="Geen team geselecteerd"; return; }
-
-  try{
-    const csv = await fetchCSV(CSV_URL);
-    const ds  = parseCSV(csv);
-    renderTeam(ds, key);
-  }catch(e){
-    document.getElementById("teamTitle").textContent="Fout bij laden";
-    console.error(e);
+function updateButtons(){
+  const add = document.getElementById("btnAdd");
+  const undo= document.getElementById("btnUndo");
+  const all = document.getElementById("btnAll");
+  const rst = document.getElementById("btnReset");
+  const ref = document.getElementById("btnRefresh");
+  if (manualCleared){
+    add.disabled=false; all.disabled=false; undo.disabled=true; rst.disabled=false; ref.disabled=false;
+  } else {
+    add.disabled   = visibleCount >= fullData.length;
+    undo.disabled  = visibleCount <= 0;
+    all.disabled   = visibleCount >= fullData.length;
+    rst.disabled   = false;
+    ref.disabled   = false;
   }
-})();
+}
+
+/* ---- Handlers ---- */
+async function refresh(preserveState=true){
+  const csv = await fetchCSV(CSV_URL);
+  fullData = computeRanks(parseCSV(csv));
+  if (preserveState) {
+    if (visibleCount > fullData.length) visibleCount = fullData.length;
+    render(fullData);
+  } else {
+    manualCleared = true; visibleCount = 0; render(fullData);
+  }
+}
+
+document.getElementById("btnAdd").onclick  = ()=>{ manualCleared=false; visibleCount = Math.min(visibleCount+1, fullData.length); render(fullData); };
+document.getElementById("btnUndo").onclick = ()=>{ if (manualCleared) return; visibleCount = Math.max(visibleCount-1, 0); render(fullData); };
+document.getElementById("btnAll").onclick  = ()=>{ manualCleared=false; visibleCount = fullData.length; render(fullData); };
+document.getElementById("btnReset").onclick= ()=>{ manualCleared=true; visibleCount=0; render(fullData); };
+document.getElementById("btnRefresh").onclick = ()=>{ refresh(true); };
+
+/* Start: éénmalig data laden, maar NIETS tonen zolang manualCleared=true */
+refresh(true).catch(console.error);  // haalt CSV op; render() toont “Nog geen teams getoond”
 </script>
 </body>
 </html>
