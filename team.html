@@ -41,6 +41,26 @@
 
     .pill{ display:inline-block; padding:4px 10px; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:13px; margin-bottom:12px; }
 
+    
+    /* Per‑round mini bars */
+    .round-bar-wrap {
+      width:100%;
+      height:10px;
+      background:#efefef;
+      border:2px solid var(--spes-green);
+      border-radius:999px;
+      overflow:hidden;
+      box-sizing:border-box;
+      margin:4px 0;
+    }
+
+    .round-bar {
+      height:100%;
+      width:0%;
+      background:var(--spes-green);
+      transition:width .45s ease;
+    }
+
     /* Ronde-lijst – badge + score/max + % */
     .rows{ display:grid; gap:10px; }
     .row{
@@ -225,8 +245,22 @@ function renderTeam(ds, keyRaw){
     const val  = document.createElement("div"); val.className="value"; val.textContent = `${v} / ${maxR}`;
     const per  = document.createElement("div"); per.className="perc";  per.textContent = `${pct}%`;
 
-    row.appendChild(lab); row.appendChild(val); row.appendChild(per);
+    
+    // BAR
+    const barWrap = document.createElement("div");
+    barWrap.className = "round-bar-wrap";
+    const bar = document.createElement("div");
+    bar.className = "round-bar";
+    bar.style.width = maxR > 0 ? Math.round((v/maxR)*100) + "%" : "0%";
+    barWrap.appendChild(bar);
+
+    row.appendChild(lab);
+    row.appendChild(barWrap);
+    row.appendChild(val);
+    row.appendChild(per);
+
     rowsEl.appendChild(row);
+
   });
 
   totalEl.textContent = `${item.total} / ${ds.maxTotal}`;

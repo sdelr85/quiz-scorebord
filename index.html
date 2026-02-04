@@ -23,6 +23,11 @@
       /* Badges (niet‑podium) */
       --rank-default-bg:#CFE8CF;
       --rank-default-fg:#1B5E20;
+
+      /* Podium border colors (to match fills) */
+      --gold-border:#e0ac08;
+      --silver-border:#aab0b6;
+      --bronze-border:#c97a2b;
     }
 
     body{ margin:0; background:var(--bg); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
@@ -35,11 +40,11 @@
     .brand__title{ margin:0; font-size:clamp(34px,4.4vw,50px); color:var(--quiz-red); font-weight:900; line-height:1.1; }
     .brand__subtitle{ margin:0; color:var(--muted); }
 
-    /* Actions – groene rand zoals de bar-outline */
+    /* Actions – green border, like bars */
     .actions{ max-width:1200px; margin:16px auto; padding:0 20px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
     .btn{
       padding:10px 16px; border-radius:10px;
-      border:2px solid var(--spes-green);           /* << dezelfde groene rand */
+      border:2px solid var(--spes-green);
       font-size:15px; font-weight:600; cursor:pointer; transition:.18s;
       background:#fff; color:var(--spes-green);
     }
@@ -65,20 +70,38 @@
       box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
     }
 
-    /* Rang-badge – overal exact zelfde afmeting */
-    .place{
-      width:56px; height:56px; border-radius:12px;
-      box-sizing:border-box;                           /* << grootte inclusief rand */
-      display:grid; place-items:center;
-      font-weight:800; font-size:22px;
-      color:var(--rank-default-fg);
-      background:var(--rank-default-bg);
-      border:2px solid #bfe0bf;                        /* << ook voor podium voor gelijke grootte */
-      justify-self:center;
+    /* Rang-badge – same size for all, with color‑matched borders for podium */
+    .place {
+      width:56px;
+      height:56px;
+      border-radius:12px;
+      display:grid;
+      place-items:center;
+      font-weight:800;
+      font-size:22px;
+      box-sizing:border-box;
     }
-    .place.gold  { background:linear-gradient(135deg, var(--spes-yellow), #ffb300); color:#333; }
-    .place.silver{ background:linear-gradient(135deg, #e0e0e0, #bdbdbd); color:#333; }
-    .place.bronze{ background:linear-gradient(135deg, #ffcc80, #fb8c00); color:#333; }
+
+    /* Golden podium */
+    .place.gold {
+      background:linear-gradient(135deg, var(--spes-yellow), #ffb300);
+      border:2px solid #d49800;      /* dark edge of gold */
+      color:#333;
+    }
+
+    /* Silver podium */
+    .place.silver {
+      background:linear-gradient(135deg, #e0e0e0, #bdbdbd);
+      border:2px solid #9e9e9e;      /* dark silver border */
+      color:#333;
+    }
+
+    /* Bronze podium */
+    .place.bronze {
+      background:linear-gradient(135deg, #ffcc80, #fb8c00);
+      border:2px solid #c66a00;      /* dark bronze border */
+      color:#333;
+    }
 
     /* Teamlijst (meerdere namen onder elkaar) */
     .teamlist{ display:flex; flex-direction:column; gap:6px; }
@@ -138,12 +161,12 @@ const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvi
 /* === STATE === */
 let groups = [];              // [{rank, total, teams:[{team,token}]}]
 let top5Groups = [];          // groups.filter(g=>g.rank<=5)
-let visibleGroupCount = 0;    // incremental (van onder naar boven)
-let visibleTop5Count = 0;     // incremental binnen top-5
-let manualCleared = true;     // start leeg
-let maxTotal = 0;             // som maxima
+let visibleGroupCount = 0;    // incremental (from lowest rank up)
+let visibleTop5Count = 0;     // incremental inside top‑5
+let manualCleared = true;     // start empty
+let maxTotal = 0;             // sum of maxima
 let mode = "incremental";     // 'incremental' | 'top5inc' | 'all'
-let modeLock = null;          // null | 'incremental' | 'top5inc'  (no mixing tussen beide "voeg"-modi)
+let modeLock = null;          // null | 'incremental' | 'top5inc'  (no mixing)
 
 /* Helpers */
 async function fetchCSV(u){
@@ -151,8 +174,6 @@ async function fetchCSV(u){
   if(!r.ok) throw new Error("CSV ophalen mislukt");
   return await r.text();
 }
-
-/* Rondekolommen = headers vanaf C; laatste header TOTAL/TOTAAL negeren; laatste rij = MAX */
 function roundIndices(headers){
   const start = 2; // C
   let end = headers.length - 1;
@@ -161,12 +182,10 @@ function roundIndices(headers){
   const idx=[]; for(let i=start;i<=end;i++) idx.push(i);
   return idx;
 }
-
 function parseCSV(text){
   const rows = text.trim().replace(/^\uFEFF/,"").split(/\r?\n/)
     .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => x.replace(/^"|"$/g,"").trim()));
   if(!rows.length) return {teams:[], maxTotal:1};
-
   const headers = rows[0];
   const hLow = headers.map(h=>h.toLowerCase());
   const teamIdx = hLow.indexOf("team");
@@ -189,14 +208,12 @@ function parseCSV(text){
 
   return {teams, maxTotal};
 }
-
 function denseRank(items){
   items.sort((a,b)=> b.total - a.total || a.team.localeCompare(b.team,'nl'));
   let prev=null, rank=0;
   items.forEach((x,i)=>{ if(prev===null || x.total<prev) rank=i+1; x.rank=rank; prev=x.total; });
   return items;
 }
-
 function groupByRank(items){
   const map = new Map();
   for(const t of items){
@@ -204,7 +221,7 @@ function groupByRank(items){
     map.get(t.rank).teams.push({team:t.team, token:t.token});
   }
   for(const g of map.values()) g.teams.sort((a,b)=> a.team.localeCompare(b.team,'nl'));
-  return Array.from(map.values()).sort((a,b)=> a.rank-b.rank); // ascending rank
+  return Array.from(map.values()).sort((a,b)=> a.rank-b.rank);
 }
 
 function render(){
@@ -223,10 +240,10 @@ function render(){
     visible = groups;
   }else if(mode === "top5inc"){
     const take = Math.max(0, Math.min(visibleTop5Count, top5Groups.length));
-    visible = top5Groups.slice(-take);              // van rang 5 omhoog naar 1
+    visible = top5Groups.slice(-take);              // from rank 5 upwards
   }else{
     const take = Math.max(0, Math.min(visibleGroupCount, groups.length));
-    visible = groups.slice(-take);                  // van laagste rang omhoog
+    visible = groups.slice(-take);                  // from lowest upwards
   }
 
   const denom = Math.max(1, maxTotal);
@@ -345,7 +362,7 @@ document.getElementById("btnUndo").onclick = ()=>{
     visibleGroupCount = Math.max(visibleGroupCount-1, 0);
     if(visibleGroupCount===0) manualCleared=true;
   } else {
-    // vanuit "all": stap terug naar incremental lock indien die bestond
+    // vanuit "all": stap terug naar de actieve lock (indien aanwezig)
     if(modeLock==='top5inc'){ mode='top5inc'; visibleTop5Count = Math.max(top5Groups.length-1,0); }
     else { mode='incremental'; visibleGroupCount = Math.max(groups.length-1,0); }
   }
