@@ -59,11 +59,11 @@
       transition:width .45s ease;
     }
 
-    /* Round rows: [label] [bar] [score/max] [%] */
+    /* Round rows: [label] [score/max] [bar] [%] */
     .rows { display:grid; gap:10px; }
     .row{
       display:grid;
-      grid-template-columns: minmax(280px, 1.4fr) 2.2fr 130px 100px;
+      grid-template-columns: minmax(280px, 1.4fr) 130px 2.2fr 100px;
       gap:12px;
       align-items:center;
       padding:6px 0;
@@ -89,7 +89,7 @@
     /* Total row: 4 columns too, with a bar */
     .total-row{
       display:grid;
-      grid-template-columns: minmax(280px, 1.4fr) 2.2fr 130px 100px;
+      grid-template-columns: minmax(280px, 1.4fr) 130px 2.2fr 100px;
       gap:12px;
       align-items:center;
       padding-top:10px;
@@ -109,7 +109,7 @@
       box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
     }
     .chart h3{ margin:0 0 8px; font-size:18px; }
-    .chart svg{ width:100%; height:820px; display:block; }
+    .chart svg{ width:100%; height:600px; display:block; }
     .axis text{ fill:#666; font-size:12px; }
     .gridline{ stroke:#e9eaec; stroke-width:1; }
     .rank-path{ fill:none; stroke:var(--spes-green); stroke-width:3; }
@@ -137,15 +137,15 @@
 
     <div class="total-row">
       <div class="label"><span class="rnum" style="opacity:0">0</span><span></span></div>
-      <div class="round-bar-wrap"><div id="totalBar" class="round-bar"></div></div>
       <div id="totalScore" class="value">0 / 0</div>
+      <div class="round-bar-wrap"><div id="totalBar" class="round-bar"></div></div>
       <div id="totalPerc"  class="perc">0%</div>
     </div>
   </div>
 
   <div class="chart">
     <h3>Evolutie van de positie per ronde</h3>
-    <svg id="rankChart" viewBox="0 0 1100 820" preserveAspectRatio="none" aria-label="Positie per ronde"></svg>
+    <svg id="rankChart" viewBox="0 0 1100 600" preserveAspectRatio="none" aria-label="Positie per ronde"></svg>
   </div>
 
   <p class="back">
@@ -256,19 +256,21 @@ function renderTeam(ds, keyRaw){
     const txt  = document.createElement("div"); txt.textContent = labels[i] || `R${i+1}`;
     lab.appendChild(badge); lab.appendChild(txt);
 
-    // 2) bar
+    // 2) score/max
+    const val  = document.createElement("div"); val.className="value"; val.textContent = `${v} / ${maxR}`;
+
+    // 3) bar
     const barWrap = document.createElement("div"); barWrap.className = "round-bar-wrap";
     const bar     = document.createElement("div"); bar.className = "round-bar";
     bar.style.width = maxR > 0 ? Math.round((v/maxR)*100) + "%" : "0%";
     barWrap.appendChild(bar);
 
-    // 3) score/max and 4) percentage
-    const val  = document.createElement("div"); val.className="value"; val.textContent = `${v} / ${maxR}`;
+    // 4) percentage
     const per  = document.createElement("div"); per.className="perc";  per.textContent = `${pct}%`;
 
     row.appendChild(lab);
-    row.appendChild(barWrap);
     row.appendChild(val);
+    row.appendChild(barWrap);
     row.appendChild(per);
     rowsEl.appendChild(row);
   });
@@ -291,15 +293,14 @@ function drawRankChart(svgId, posArr, nTeams, labels){
   svg.innerHTML = "";
   if(!posArr || !posArr.length){ svg.innerHTML = "<text x='12' y='24' class='axis'>Geen data</text>"; return; }
 
-  // lagere ondermarge -> labels dichter bij as
-  const W=1200, H=820, L=75, R=20, T=16, B=70;
+  // increased bottom margin for rotated x-labels
+  const W=1200, H=600, L=75, R=20, T=16, B=120;
   const plotW=W-L-R, plotH=H-T-B;
 
   const x = (i)=> L + (posArr.length<=1? plotW/2 : (i*(plotW/(posArr.length-1))));
   const y = (rank)=> T + ((rank-1) * (plotH/Math.max(1,(nTeams-1)))); // 1 bovenaan
 
-  const minLabelGapPx = 16;
-  const step = Math.max(1, Math.ceil(nTeams / (plotH / minLabelGapPx)));
+  // Show Y-axis labels every 5 positions, but keep all gridlines
   for(let r=1; r<=nTeams; r++){
     const yy=y(r);
     const gl = document.createElementNS("http://www.w3.org/2000/svg","line");
@@ -307,7 +308,7 @@ function drawRankChart(svgId, posArr, nTeams, labels){
     gl.setAttribute("x2", W-R); gl.setAttribute("y2", yy);
     gl.setAttribute("class","gridline");
     svg.appendChild(gl);
-    if((r-1)%step===0){
+    if(r % 5 === 0){
       const lt = document.createElementNS("http://www.w3.org/2000/svg","text");
       lt.setAttribute("x", L-8); lt.setAttribute("y", yy+4);
       lt.setAttribute("text-anchor","end");
@@ -317,10 +318,10 @@ function drawRankChart(svgId, posArr, nTeams, labels){
     }
   }
 
-  // x‑labels: zeer dichtbij de plot-as (T+plotH + 12)
+  // x‑labels: positioned with enough space for rotation
   labels.forEach((lab,i)=>{
     const tx = document.createElementNS("http://www.w3.org/2000/svg","text");
-    const xi = x(i), yi = T + plotH + 12;
+    const xi = x(i), yi = T + plotH + 16;
     tx.setAttribute("x", xi); tx.setAttribute("y", yi);
     tx.setAttribute("text-anchor","end"); tx.setAttribute("class","axis");
     tx.setAttribute("transform", `rotate(-60, ${xi}, ${yi})`);
