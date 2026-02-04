@@ -84,8 +84,22 @@
     .team a{ color:var(--text); text-decoration:none; }
     .team a:hover{ text-decoration:underline; }
 
-    .bar-wrap{ width:100%; height:10px; background:#efefef; border-radius:999px; overflow:hidden; }
-    .bar{ height:100%; width:0%; background:var(--spes-green); transition:width .45s ease; }
+    /* Balk: track = max totale score, fill = team / maxTotal, met groene outline */
+    .bar-wrap{
+      width:100%;
+      height:12px;
+      background:#efefef;
+      border:2px solid var(--spes-green);   /* fijne groene omranding */
+      border-radius:999px;
+      overflow:hidden;
+      box-sizing:border-box;
+    }
+    .bar{
+      height:100%;
+      width:0%;
+      background:var(--spes-green);
+      transition:width .45s ease;
+    }
 
     .score{ text-align:right; font-size:22px; font-weight:800; color:var(--text); }
   </style>
@@ -121,8 +135,8 @@ const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvi
 /* === STATE === */
 let fullData = [];
 let visibleCount = 0;
-/* Start leeg: gebruiker kiest Add/All of klikt Vernieuwen en dan Add/All */
-let manualCleared = true;
+let manualCleared = true;   // start leeg
+let maxTotal = 0;
 
 /* Helpers */
 async function fetchCSV(u){
@@ -131,13 +145,13 @@ async function fetchCSV(u){
   return await r.text();
 }
 
-/* Column C..(last-1 if 'TOTAL'): detect round columns from headers */
+/* Rondekolommen = headers vanaf kolom C; laatste kolom "TOTAL/TOTAAL" negeren.
+   Laatste CSV-rij = MAXIMA per ronde (exclusief uit teams). */
 function getRoundColumnIndices(headers){
-  const start = 2; // column C (0=A,1=B,2=C)
+  const start = 2; // C
   let end = headers.length - 1;
   const lastLabel = headers[headers.length-1]?.trim().toLowerCase();
   if (lastLabel === "total" || lastLabel === "totaal") end = headers.length - 2;
-  // generate indices from start..end inclusive
   const idxs = [];
   for(let i=start;i<=end;i++) idxs.push(i);
   return idxs;
@@ -146,16 +160,22 @@ function getRoundColumnIndices(headers){
 function parseCSV(text){
   const rows = text.trim().replace(/^\uFEFF/,"").split(/\r?\n/)
     .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => x.replace(/^"|"$/g,"").trim()));
-  if(!rows.length) return [];
+  if(!rows.length) return {teams:[], roundIdxs:[], maxByRound:[], maxTotal:0};
 
   const headers = rows[0].map(h=>h.trim());
   const hLow = headers.map(h=>h.toLowerCase());
   const teamIdx  = hLow.indexOf("team");
   const tokenIdx = hLow.indexOf("token");
-
   const roundIdxs = getRoundColumnIndices(headers);
 
-  const data = rows.slice(1).map(r=>{
+  // maxima = laatste rij
+  const last = rows[rows.length-1] || [];
+  const maxByRound = roundIdxs.map(i => Number((last[i]||"0").replace(",","."))||0);
+  const maxTotal = maxByRound.reduce((a,b)=>a+b,0);
+
+  // teams = rijen 1..(n-2) (exclusief header en exclusief laatste maxima-rij)
+  const teamRows = rows.slice(1, Math.max(1, rows.length-1));
+  const teams = teamRows.map(r=>{
     const team  = teamIdx>=0 ? (r[teamIdx]||"") : "";
     const token = tokenIdx>=0 ? (r[tokenIdx]||"") : "";
     let total=0;
@@ -165,7 +185,7 @@ function parseCSV(text){
     return {team, token, total};
   }).filter(x=>x.team);
 
-  return data;
+  return {teams, roundIdxs, maxByRound, maxTotal};
 }
 
 function computeRanks(list){
@@ -187,9 +207,10 @@ function render(list){
   }
 
   const toShow = list.slice(-visibleCount);
-  const max = Math.max(1, ...toShow.map(x=>x.total));
-
+  const denom = Math.max(1, maxTotal); // totale mogelijke score
   toShow.forEach(row=>{
+    const pct = Math.max(0, Math.min(100, Math.round((row.total/denom)*100)));
+
     const card = document.createElement("div");
     card.className = "card";
 
@@ -212,7 +233,7 @@ function render(list){
     barWrap.className = "bar-wrap";
     const bar = document.createElement("div");
     bar.className = "bar";
-    bar.style.width = Math.round((row.total / max) * 100) + "%";
+    bar.style.width = pct + "%";
     barWrap.appendChild(bar);
 
     const score = document.createElement("div");
@@ -252,7 +273,9 @@ function updateButtons(){
 /* ---- Handlers ---- */
 async function refresh(preserveState=true){
   const csv = await fetchCSV(CSV_URL);
-  fullData = computeRanks(parseCSV(csv));
+  const parsed = parseCSV(csv);
+  fullData = computeRanks(parsed.teams);
+  maxTotal = parsed.maxTotal || Math.max(...fullData.map(x=>x.total), 1); // fallback
   if (preserveState) {
     if (visibleCount > fullData.length) visibleCount = fullData.length;
     render(fullData);

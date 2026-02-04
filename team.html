@@ -17,6 +17,9 @@
       --text:#222;
       --muted:#60666d;
       --line:#e1e2e5;
+
+      --rank-default-bg:#CFE8CF;
+      --rank-default-fg:#1B5E20;
     }
 
     body{ margin:0; background:var(--bg); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
@@ -42,21 +45,35 @@
 
     .pill{ display:inline-block; padding:4px 10px; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:13px; margin-bottom:12px; }
 
-    /* Ronde-lijst (zonder balken) */
-    .rows{ display:grid; gap:8px; }
+    /* Ronde-lijst (zonder balken) — met rondebadge */
+    .rows{ display:grid; gap:10px; }
     .row{
-      display:grid; grid-template-columns: minmax(220px, 1fr) auto;
+      display:grid; grid-template-columns: minmax(260px, 1fr) auto;
       gap:12px; align-items:center; padding:6px 0; border-bottom:1px dashed var(--line);
     }
     .row:last-child{ border-bottom:none; }
-    .row .label{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700; }
-    .row .value{ text-align:right; font-weight:800; }
+
+    .label{
+      display:flex; align-items:center; gap:10px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      font-weight:700;
+    }
+    .rnum{
+      min-width:36px; height:36px; border-radius:10px;
+      display:grid; place-items:center;
+      font-weight:800; color:var(--rank-default-fg);
+      background:var(--rank-default-bg);
+      border:2px solid #bfe0bf;
+      font-size:16px;
+      flex:0 0 auto;
+    }
+    .value{ text-align:right; font-weight:800; }
 
     .back{ margin-top:18px; }
     .back a{ color:var(--spes-green); text-decoration:none; font-weight:700; }
     .back a:hover{ text-decoration:underline; }
 
-    /* Grafiek – hoger gemaakt */
+    /* Grafiek – hoger + betere marges + schuine labels */
     .chart{
       background:var(--card);
       border:1px solid var(--line);
@@ -65,11 +82,11 @@
       box-shadow:0 2px 2px rgba(0,0,0,.03), 0 5px 14px rgba(0,0,0,.05);
     }
     .chart h3{ margin:0 0 8px; font-size:18px; }
-    .chart svg{ width:100%; height:420px; display:block; } /* groter */
+    .chart svg{ width:100%; height:520px; display:block; } /* hoger */
     .axis text{ fill:#666; font-size:12px; }
     .gridline{ stroke:#e9eaec; stroke-width:1; }
     .rank-path{ fill:none; stroke:var(--spes-green); stroke-width:3; }
-    .rank-dot{ fill:var(--spes-green); stroke:#fff; stroke-width:1.5; }
+    .rank-dot{ fill:var(--spes-green); stroke:#fff; stroke-width:1.5; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -96,11 +113,11 @@
 
   <div class="chart">
     <h3>Evolutie van de positie per ronde</h3>
-    <svg id="rankChart" viewBox="0 0 960 420" preserveAspectRatio="none" aria-label="Positie per ronde"></svg>
+    <svg id="rankChart" viewBox="0 0 980 520" preserveAspectRatio="none" aria-label="Positie per ronde"></svg>
   </div>
 
   <p class="back">
-    <a href="index.html" onclick="if(document.referrer){history.back();return false;}">← Terug naar scorebord</a>
+    <a href="index.html" onclick="if(document.referrer){history.back(); return false;}">← Terug naar scorebord</a>
   </p>
 </div>
 
@@ -112,9 +129,9 @@ const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbCFR9XqM4nMvi
 const norm = s => String(s||"").normalize('NFKC').trim().toLowerCase().replace(/\s+/g,' ');
 async function fetchCSV(u){ const r = await fetch(u + "&_t=" + Date.now(), {cache:"no-store"}); if(!r.ok) throw new Error("CSV ophalen mislukt"); return await r.text(); }
 
-/* Column C..(last-1 if 'TOTAL'): use headers as labels */
+/* Rondekolommen: vanaf C, laatste "TOTAL/TOTAAL" negeren; laatste rij = maxima */
 function getRoundColumns(headers){
-  const start = 2; // column C
+  const start = 2; // C
   let end = headers.length - 1;
   const lastLabel = headers[headers.length-1]?.trim().toLowerCase();
   if (lastLabel === "total" || lastLabel === "totaal") end = headers.length - 2;
@@ -126,7 +143,7 @@ function getRoundColumns(headers){
 function parseCSV(text){
   const rows = text.trim().replace(/^\uFEFF/,"").split(/\r?\n/)
     .map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => x.replace(/^"|"$/g,"").trim()));
-  if(!rows.length) return {data:[], roundCols:[]};
+  if(!rows.length) return {data:[], roundCols:[], maxByRound:[]};
 
   const headers = rows[0].map(h=>h.trim());
   const hLow    = headers.map(h=>h.toLowerCase());
@@ -135,7 +152,13 @@ function parseCSV(text){
 
   const roundCols = getRoundColumns(headers);
 
-  const data = rows.slice(1).map(r=>{
+  // maxima = laatste rij
+  const last = rows[rows.length-1] || [];
+  const maxByRound = roundCols.map(c => Number((last[c.i]||"0").replace(",","."))||0);
+
+  // teams = rijen 1..(n-2): data zonder maxima
+  const teamRows = rows.slice(1, Math.max(1, rows.length-1));
+  const data = teamRows.map(r=>{
     const team  = (r[teamIdx]  || "");
     const token = (r[tokenIdx] || "");
     const rounds = roundCols.map(c => Number((r[c.i]||"0").replace(",","."))||0);
@@ -143,7 +166,7 @@ function parseCSV(text){
     return {team, token, rounds, total};
   }).filter(x=>x.team);
 
-  return {data, roundCols};
+  return {data, roundCols, maxByRound};
 }
 
 /*** Ranking helpers ***/
@@ -153,7 +176,7 @@ function denseRanks(items){
   sorted.forEach((x,i)=>{ if(prev===null||x.total<prev) rank=i+1; map.set(x.team,rank); prev=x.total; });
   return map;
 }
-/* Positie per ronde (op cumulatieve score) */
+/* Positie per ronde (cumulatief) */
 function positionsPerRound(ds){
   const {data, roundCols} = ds;
   const R = roundCols.length;
@@ -187,14 +210,22 @@ function renderTeam(ds, keyRaw){
   const endRank = denseRanks(ds.data.map(d => ({team:d.team,total:d.total}))).get(item.team) || "-";
   rankInfo.textContent = `Positie: ${endRank} / ${ds.data.length}`;
 
-  /* Tabel met "(i). label" + score */
+  /* Tabel met rondebadge + "(i). label" en "score / max" */
   roundsEl.innerHTML="";
   const names = ds.roundCols.map((c,i)=> `${i+1}. ${c.label||("R"+(i+1))}`);
   item.rounds.forEach((v,i)=>{
+    const maxR = ds.maxByRound[i] ?? 0;
+
     const row=document.createElement("div"); row.className="row";
-    const l=document.createElement("div"); l.className="label"; l.textContent=names[i];
-    const r=document.createElement("div"); r.className="value"; r.textContent=v;
-    row.appendChild(l); row.appendChild(r);
+
+    const label=document.createElement("div"); label.className="label";
+    const badge=document.createElement("div"); badge.className="rnum"; badge.textContent = (i+1);
+    const text=document.createElement("div"); text.textContent = names[i];
+    label.appendChild(badge); label.appendChild(text);
+
+    const value=document.createElement("div"); value.className="value"; value.textContent = `${v} / ${maxR}`;
+
+    row.appendChild(label); row.appendChild(value);
     roundsEl.appendChild(row);
   });
   totalEl.textContent = item.total;
@@ -204,19 +235,20 @@ function renderTeam(ds, keyRaw){
   drawRankChart("rankChart", posMap.get(item.team), ds.data.length, ds.roundCols.map(c=>c.label||""));
 }
 
-/* SVG grafiek: x=rondenamen, y=1..N (1 bovenaan), hoge plot */
+/* SVG grafiek: x=rondenamen (gekanteld), y=1..N (1 bovenaan), hover tooltips */
 function drawRankChart(svgId, posArr, nTeams, labels){
   const svg = document.getElementById(svgId);
   svg.innerHTML = "";
   if(!posArr || !posArr.length){ svg.innerHTML = "<text x='12' y='24' class='axis'>Geen data</text>"; return; }
 
-  const W=960, H=420, L=60, R=16, T=12, B=56;
+  const W=980, H=520, L=70, R=18, T=14, B=80;  // royale marges
   const plotW=W-L-R, plotH=H-T-B;
 
   const x = (i)=> L + (posArr.length<=1? plotW/2 : (i*(plotW/(posArr.length-1))));
   const y = (rank)=> T + ((rank-1) * (plotH/Math.max(1,(nTeams-1)))); // 1 bovenaan
 
-  /* grid + y-labels voor ALLE rangen 1..N */
+  /* grid + y-labels (we labelen elke rank t/m 50; daarboven label elke 2/5) */
+  const labelStep = (nTeams<=50) ? 1 : (nTeams<=100 ? 2 : 5);
   for(let r=1; r<=nTeams; r++){
     const yy=y(r);
     const gl = document.createElementNS("http://www.w3.org/2000/svg","line");
@@ -225,19 +257,25 @@ function drawRankChart(svgId, posArr, nTeams, labels){
     gl.setAttribute("class","gridline");
     svg.appendChild(gl);
 
-    const lt = document.createElementNS("http://www.w3.org/2000/svg","text");
-    lt.setAttribute("x", L-8); lt.setAttribute("y", yy+4);
-    lt.setAttribute("text-anchor","end");
-    lt.setAttribute("class","axis");
-    lt.textContent = r;
-    svg.appendChild(lt);
+    if((r-1)%labelStep===0){
+      const lt = document.createElementNS("http://www.w3.org/2000/svg","text");
+      lt.setAttribute("x", L-8); lt.setAttribute("y", yy+4);
+      lt.setAttribute("text-anchor","end");
+      lt.setAttribute("class","axis");
+      lt.textContent = r;
+      svg.appendChild(lt);
+    }
   }
 
-  /* x-as labels (rondenamen) */
+  /* x‑as labels met hoek (-45°) */
   labels.forEach((lab,i)=>{
     const tx = document.createElementNS("http://www.w3.org/2000/svg","text");
-    tx.setAttribute("x", x(i)); tx.setAttribute("y", H-12);
-    tx.setAttribute("text-anchor","middle"); tx.setAttribute("class","axis");
+    const xi = x(i), yi = H-8;
+    tx.setAttribute("x", xi);
+    tx.setAttribute("y", yi);
+    tx.setAttribute("class","axis");
+    tx.setAttribute("text-anchor","end");
+    tx.setAttribute("transform", `rotate(-45, ${xi}, ${yi})`);
     tx.textContent = lab || `R${i+1}`;
     svg.appendChild(tx);
   });
@@ -247,11 +285,14 @@ function drawRankChart(svgId, posArr, nTeams, labels){
   const path = document.createElementNS("http://www.w3.org/2000/svg","path");
   path.setAttribute("class","rank-path"); path.setAttribute("d", d); svg.appendChild(path);
 
-  /* punten */
+  /* punten + browser tooltip via <title> */
   posArr.forEach((rank,i)=>{
     const ci = document.createElementNS("http://www.w3.org/2000/svg","circle");
     ci.setAttribute("class","rank-dot");
-    ci.setAttribute("cx", x(i)); ci.setAttribute("cy", y(rank)); ci.setAttribute("r","4.5");
+    ci.setAttribute("cx", x(i)); ci.setAttribute("cy", y(rank)); ci.setAttribute("r","5");
+    const t = document.createElementNS("http://www.w3.org/2000/svg","title");
+    t.textContent = `${labels[i]||("R"+(i+1))}: positie ${rank}`;
+    ci.appendChild(t);
     svg.appendChild(ci);
   });
 }
