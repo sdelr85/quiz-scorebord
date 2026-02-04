@@ -96,8 +96,11 @@
       font-weight:900; font-size:20px;         /* a bit larger for emphasis */
     }
     .total-row .perc { color:#1B5E20; }
-    .total-row .label { visibility:hidden; }    /* keep column alignment */
-    .total-row .label::after{ content:""; }
+    .total-row .label { 
+      visibility:visible;
+      font-size:18px;
+      font-weight:900;
+    }
 
     .back{ margin-top:18px; }
     .back a{ color:var(--spes-green); text-decoration:none; font-weight:700; }
@@ -201,7 +204,7 @@
     <div class="rows" id="roundList"></div>
 
     <div class="total-row">
-      <div class="label"><span class="rnum" style="opacity:0">0</span><span></span></div>
+      <div class="label"><span class="rnum" id="totalBadge">T</span><span id="totalLabel">TOTAAL</span></div>
       <div id="totalScore" class="value">0 / 0</div>
       <div class="round-bar-wrap"><div id="totalBar" class="round-bar"></div></div>
       <div id="totalPerc"  class="perc">0%</div>
@@ -341,6 +344,10 @@ function renderTeam(ds, keyRaw){
   });
 
   totalEl.textContent = `${item.total} / ${ds.maxTotal}`;
+  const totalLabel = document.getElementById("totalLabel");
+  const totalBadge = document.getElementById("totalBadge");
+  if (totalLabel) totalLabel.textContent = "TOTAAL";
+  if (totalBadge) totalBadge.textContent = "T";
   const finalPct = ds.maxTotal>0 ? Math.round((item.total/ds.maxTotal)*100) : 0;
   percEl.textContent  = `${finalPct}%`;
 
