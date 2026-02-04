@@ -108,12 +108,26 @@
 
     @media (max-width: 480px) {
       .brand__title { font-size: 28px; }
+      
+      .wrap { padding: 0 12px 40px; }
+      
+      .group-card {
+        gap: 8px;
+        padding: 12px 14px;
+      }
+      
+      .teamlist { gap: 4px; }
+      
+      .team a { font-size: 14px; }
+      
       .score { font-size: 16px; }
+      
       .place {
         width: 48px;
         height: 48px;
         font-size: 18px;
       }
+      
       .btn {
         padding: 8px 12px;
         font-size: 13px;
@@ -341,11 +355,7 @@ function render(){
     root.appendChild(card);
   }
 
-  const shownRanks = visible.length;
-  const shownTeams = visible.reduce((sum, g) => sum + g.teams.length, 0);
-  const totalTeams = groups.reduce((sum, g) => sum + g.teams.length, 0);
-  meta.textContent = (shownRanks ? `Getoonde rangen: ${shownRanks}/${groups.length} - Getoonde teams: ${shownTeams}/${totalTeams} – ` : "Nog geen teams getoond – ")
-                   + "Laatst bijgewerkt: " + new Date().toLocaleTimeString();
+  meta.textContent = "Laatst bijgewerkt: " + new Date().toLocaleTimeString();
   updateButtons();
 }
 
